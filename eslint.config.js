@@ -6,5 +6,9 @@ module.exports = defineConfig([
   expoConfig,
   {
     ignores: ['dist/*'],
+    rules: {
+      // Disable import/no-unresolved for TypeScript path aliases
+      'import/no-unresolved': 'off',
+    },
   },
 ]);

@@ -5,9 +5,22 @@ import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useColors } from '@/hooks/use-colors';
+import { useTranslation } from '@/hooks/use-translation';
 import { Link } from 'expo-router';
 
+export const HomeJa = {
+  welcome: 'こんにちは',
+};
+
+export const HomeEn = {
+  welcome: 'welcome',
+};
+
 export default function HomeScreen() {
+  const colors = useColors();
+  const t = useTranslation();
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -16,9 +29,12 @@ export default function HomeScreen() {
           source={require('@/assets/images/partial-react-logo.png')}
           style={styles.reactLogo}
         />
-      }>
+      }
+    >
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
+        <ThemedText type="title" style={{ color: colors.primary }}>
+          {t('home.welcome')}
+        </ThemedText>
         <HelloWave />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>

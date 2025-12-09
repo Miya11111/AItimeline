@@ -1,0 +1,6 @@
+{
+  "hooks": {
+    "post-tool-use": ".claude/hooks/post-tool-use.sh"
+  },
+  "customInstructions": "## File Organization Rules\n\n- All README files and documentation files (*.md) must be stored in the `readme/` directory\n- When creating new README or documentation files, always place them in `readme/` folder\n- File naming convention: Use descriptive names in Japanese or English (e.g., `readme/色の設定.md`, `readme/hooks設定.md`)\n- Exception: Root README.md and .claude/README.md can stay in their respective locations"
+}
