@@ -5,6 +5,15 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { t } from 'i18next';
+
+export const TabLayoutLangJa = {
+  home: "ホーム"
+}
+
+export const TabLayoutLangEn = {
+  home: "Home"
+}
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -13,14 +22,15 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
+        headerShown: true,
+        headerTitleAlign: 'center',
         tabBarButton: HapticTab,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t("tabLayout.home"),
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
