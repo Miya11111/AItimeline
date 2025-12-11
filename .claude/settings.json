@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "afterToolUse": {
+      "Write": "npm run check",
+      "Edit": "npm run check"
+    }
+  }
+}

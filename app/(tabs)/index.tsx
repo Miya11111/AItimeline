@@ -1,7 +1,6 @@
-import { Text, View } from 'react-native';
+import { ScrollView } from 'react-native';
 
-import { useColors } from '@/hooks/use-colors';
-import { useTranslation } from 'react-i18next';
+import Tweet, { TweetType } from '@/components/organisms/tweet';
 
 export const HomeLangJa = {
   welcome: 'こんにちは',
@@ -12,14 +11,45 @@ export const HomeLangEn = {
 };
 
 export default function HomeScreen() {
-  const colors = useColors();
-  const { t } = useTranslation();
+  const tweets: TweetType[] = [
+    {
+      image: require('@/assets/mock_icon1.png'),
+      name: 'ミジンコ2',
+      nameId: 'mijinji_minji',
+      message: 'あああああああああああああああああああああああああああ',
+      animalNum: 1,
+      retweetNum: 2,
+      favoriteNum: 3,
+      impressionNum: 10,
+    },
+    {
+      image: require('@/assets/mock_icon1.png'),
+      name: 'ユーザー名',
+      nameId: 'user_id',
+      message: 'サンプルツイートメッセージです',
+      animalNum: 5,
+      retweetNum: 3,
+      favoriteNum: 8,
+      impressionNum: 25,
+    },
+  ];
 
   return (
-    <View style={{ flex: 1}}>
-        <View style={{width: '100%', height: 36, backgroundColor:colors.primary}}>
-          <Text style={{color: colors.white}}>{t("home.welcome")}</Text>
-        </View>
-    </View>
-  )
+    <ScrollView>
+      {/* つぶやきタブ */}
+      {tweets.map((tweet, key) => (
+        <Tweet
+          image={tweet.image}
+          name={tweet.name}
+          nameId={tweet.nameId}
+          message={tweet.message}
+          animalNum={tweet.animalNum}
+          retweetNum={tweet.retweetNum}
+          favoriteNum={tweet.favoriteNum}
+          impressionNum={tweet.impressionNum}
+          key={key}
+        />
+      ))}
+    </ScrollView>
+  );
 }

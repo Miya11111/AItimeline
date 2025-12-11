@@ -12,23 +12,31 @@
  */
 export const colors = {
   // Brand Colors
-  primary: {
-    light: '#48b3ffff',
+  blue: {
+    light: '#51b4fcff',
     dark: '#3893faff',
   },
-  caution: {
+  yellow: {
     light: '#f3e460ff',
     dark: '#ffd54f',
   },
-  warning: {
-    light: '#e63232ff',
-    dark: '#e57373',
+  red: {
+    light: '#fa3c75ff',
+    dark: '#e7316eff',
+  },
+  green: {
+    light: '#26e083ff',
+    dark: '#38ad65ff',
   },
 
   // Grays
-  gray: {
-    light: '#b4b4b4ff',
+  lightGray: {
+    light: '#dfdfdfff',
     dark: '#9BA1A6',
+  },
+  darkGray: {
+    light: '#b4b4b4ff',
+    dark: '#57595aff',
   },
 
   // Whites & Blacks

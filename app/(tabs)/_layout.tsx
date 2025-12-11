@@ -3,34 +3,38 @@ import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColors } from '@/hooks/use-colors';
 import { t } from 'i18next';
 
 export const TabLayoutLangJa = {
-  home: "ホーム"
-}
+  home: 'ホーム',
+};
 
 export const TabLayoutLangEn = {
-  home: "Home"
-}
+  home: 'Home',
+};
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const colors = useColors();
+  // const colorScheme = useColorScheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: colors.lightGray,
         headerShown: true,
         headerTitleAlign: 'center',
         tabBarButton: HapticTab,
+        headerStyle: {
+          borderBottomWidth: 1,
+          borderBottomColor: colors.darkGray,
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: t("tabLayout.home"),
+          title: t('tabLayout.home'),
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />

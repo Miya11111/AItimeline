@@ -12,18 +12,18 @@ export const Colors = {
   light: {
     text: colors.black.light,
     background: colors.white.light,
-    tint: colors.primary.light,
-    icon: colors.gray.light,
-    tabIconDefault: colors.gray.light,
-    tabIconSelected: colors.primary.light,
+    tint: colors.blue.light,
+    icon: colors.lightGray.light,
+    tabIconDefault: colors.lightGray.light,
+    tabIconSelected: colors.blue.light,
   },
   dark: {
     text: colors.black.dark,
     background: colors.white.dark,
-    tint: colors.primary.dark,
-    icon: colors.gray.dark,
-    tabIconDefault: colors.gray.dark,
-    tabIconSelected: colors.primary.dark,
+    tint: colors.blue.dark,
+    icon: colors.lightGray.dark,
+    tabIconDefault: colors.lightGray.dark,
+    tabIconSelected: colors.blue.dark,
   },
 };
 
