@@ -24,17 +24,31 @@ export default function Tweet({
 }: TweetType) {
   const colors = useColors();
 
+  // 初期値を生成（favoriteNumとretweetNumを相関させる）
+  const [initialValues] = useState(() => {
+    const baseFavoriteNum = Math.floor(Math.random() * 10001); // 0-10000
+    // retweetNumはfavoriteNumの5-20%程度にする
+    const retweetRatio = 0.05 + Math.random() * 0.15; // 5-20%
+    const baseRetweetNum = Math.floor(baseFavoriteNum * retweetRatio);
+
+    return {
+      animalNum: 0,
+      retweetNum: baseRetweetNum,
+      favoriteNum: baseFavoriteNum,
+    };
+  });
+
   const [tweetState, setTweetState] = useState({
-    animalNum: 0,
-    retweetNum: 0,
-    favoriteNum: 0,
+    animalNum: initialValues.animalNum,
+    retweetNum: initialValues.retweetNum,
+    favoriteNum: initialValues.favoriteNum,
     impressionNum: 0,
     bookmark: false,
   });
 
-  const initialAnimalNum = 0;
-  const initialRetweetNum = 0;
-  const initialFavoriteNum = 0;
+  const initialAnimalNum = initialValues.animalNum;
+  const initialRetweetNum = initialValues.retweetNum;
+  const initialFavoriteNum = initialValues.favoriteNum;
 
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [slideAnim] = useState(new Animated.Value(400));
@@ -163,6 +177,9 @@ export default function Tweet({
         message={message}
         tweetState={tweetState}
         setTweetState={setTweetState}
+        initialAnimalNum={initialAnimalNum}
+        initialRetweetNum={initialRetweetNum}
+        initialFavoriteNum={initialFavoriteNum}
       />
     </>
   );

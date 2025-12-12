@@ -24,6 +24,9 @@ type TweetDetailProps = {
   message: string;
   tweetState: TweetState;
   setTweetState: React.Dispatch<React.SetStateAction<TweetState>>;
+  initialAnimalNum: number;
+  initialRetweetNum: number;
+  initialFavoriteNum: number;
 };
 
 export default function TweetDetail({
@@ -36,12 +39,11 @@ export default function TweetDetail({
   message,
   tweetState,
   setTweetState,
+  initialAnimalNum,
+  initialRetweetNum,
+  initialFavoriteNum,
 }: TweetDetailProps) {
   const colors = useColors();
-
-  const initialAnimalNum = 0;
-  const initialRetweetNum = 0;
-  const initialFavoriteNum = 0;
 
   const handleBookmarkPress = () => {
     setTweetState((prev) => ({ ...prev, bookmark: !prev.bookmark }));
