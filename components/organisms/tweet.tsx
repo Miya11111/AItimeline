@@ -1,9 +1,10 @@
 import { useColors } from '@/hooks/use-colors';
 import { useState } from 'react';
 import { Animated, ImageSourcePropType, Text, TouchableOpacity, View } from 'react-native';
-import IconButton from '../atoms/IconButton';
 import { Icon } from '../atoms/icon';
+import IconButton from '../atoms/IconButton';
 import RoundImage from '../atoms/RoundImage';
+import AnimalIconButton from '../molecules/animalIconButton';
 import FavIconButton from '../molecules/favIconButton';
 import RetweetIconButton from '../molecules/retweetButton';
 import TweetDetail from './tweetDetail';
@@ -13,10 +14,6 @@ export type TweetType = {
   name: string;
   nameId: string;
   message: string;
-  animalNum: number;
-  retweetNum: number;
-  favoriteNum: number;
-  impressionNum: number;
 };
 
 export default function Tweet({
@@ -24,19 +21,27 @@ export default function Tweet({
   name,
   nameId,
   message,
-  animalNum,
-  retweetNum,
-  favoriteNum,
-  impressionNum,
 }: TweetType) {
   const colors = useColors();
-  const [bookmark, setBookmark] = useState(false);
+
+  const [tweetState, setTweetState] = useState({
+    animalNum: 0,
+    retweetNum: 0,
+    favoriteNum: 0,
+    impressionNum: 0,
+    bookmark: false,
+  });
+
+  const initialAnimalNum = 0;
+  const initialRetweetNum = 0;
+  const initialFavoriteNum = 0;
+
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [slideAnim] = useState(new Animated.Value(400));
 
   //ブックマークを押した際の挙動
   const handleBookmarkPress = () => {
-    setBookmark(!bookmark);
+    setTweetState((prev) => ({ ...prev, bookmark: !prev.bookmark }));
   };
 
   // ツイートの詳細モーダルを表示
@@ -92,16 +97,25 @@ export default function Tweet({
               }}
             >
               <View style={{ flex: 1 }}>
-                <IconButton
-                  icon={{ name: 'paw', family: 'FontAwesome6', size: 16, color: colors.lightGray }}
-                  number={animalNum}
+                <AnimalIconButton
+                  animalNum={tweetState.animalNum}
+                  setAnimalNum={(num) => setTweetState((prev) => ({ ...prev, animalNum: num }))}
+                  initialAnimalNum={initialAnimalNum}
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <RetweetIconButton retweetNum={retweetNum} />
+                <RetweetIconButton
+                  retweetNum={tweetState.retweetNum}
+                  setRetweetNum={(num) => setTweetState((prev) => ({ ...prev, retweetNum: num }))}
+                  initialRetweetNum={initialRetweetNum}
+                />
               </View>
               <View style={{ flex: 1 }}>
-                <FavIconButton favoriteNum={favoriteNum} />
+                <FavIconButton
+                  favoriteNum={tweetState.favoriteNum}
+                  setFavoriteNum={(num) => setTweetState((prev) => ({ ...prev, favoriteNum: num }))}
+                  initialFavoriteNum={initialFavoriteNum}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <IconButton
@@ -111,7 +125,7 @@ export default function Tweet({
                     size: 16,
                     color: colors.lightGray,
                   }}
-                  number={impressionNum}
+                  number={tweetState.impressionNum}
                 />
               </View>
               <View style={{ flexDirection: 'row', gap: 4 }}>
@@ -122,7 +136,7 @@ export default function Tweet({
                   <Icon
                     name="bookmark"
                     size={16}
-                    color={bookmark ? colors.blue : colors.lightGray}
+                    color={tweetState.bookmark ? colors.blue : colors.lightGray}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -147,12 +161,8 @@ export default function Tweet({
         name={name}
         nameId={nameId}
         message={message}
-        animalNum={animalNum}
-        retweetNum={retweetNum}
-        favoriteNum={favoriteNum}
-        impressionNum={impressionNum}
-        bookmark={bookmark}
-        setBookmark={handleBookmarkPress}
+        tweetState={tweetState}
+        setTweetState={setTweetState}
       />
     </>
   );

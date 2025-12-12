@@ -2,8 +2,17 @@ import { useColors } from '@/hooks/use-colors';
 import { Animated, ImageSourcePropType, Modal, Text, TouchableOpacity, View } from 'react-native';
 import IconButton from '../atoms/IconButton';
 import RoundImage from '../atoms/RoundImage';
+import AnimalIconButton from '../molecules/animalIconButton';
 import FavIconButton from '../molecules/favIconButton';
 import RetweetIconButton from '../molecules/retweetButton';
+
+type TweetState = {
+  animalNum: number;
+  retweetNum: number;
+  favoriteNum: number;
+  impressionNum: number;
+  bookmark: boolean;
+};
 
 type TweetDetailProps = {
   visible: boolean;
@@ -13,12 +22,8 @@ type TweetDetailProps = {
   name: string;
   nameId: string;
   message: string;
-  animalNum: number;
-  retweetNum: number;
-  favoriteNum: number;
-  impressionNum: number;
-  bookmark: boolean;
-  setBookmark: () => void;
+  tweetState: TweetState;
+  setTweetState: React.Dispatch<React.SetStateAction<TweetState>>;
 };
 
 export default function TweetDetail({
@@ -29,14 +34,18 @@ export default function TweetDetail({
   name,
   nameId,
   message,
-  animalNum,
-  retweetNum,
-  favoriteNum,
-  impressionNum,
-  bookmark,
-  setBookmark,
+  tweetState,
+  setTweetState,
 }: TweetDetailProps) {
   const colors = useColors();
+
+  const initialAnimalNum = 0;
+  const initialRetweetNum = 0;
+  const initialFavoriteNum = 0;
+
+  const handleBookmarkPress = () => {
+    setTweetState((prev) => ({ ...prev, bookmark: !prev.bookmark }));
+  };
 
   return (
     <Modal visible={visible} transparent={true} animationType="none" onRequestClose={onClose}>
@@ -118,7 +127,7 @@ export default function TweetDetail({
                 style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}
               >
                 <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
-                  {retweetNum}
+                  {tweetState.retweetNum}
                 </Text>
                 <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
                   リツイート
@@ -128,7 +137,7 @@ export default function TweetDetail({
                 style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}
               >
                 <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
-                  {retweetNum}
+                  {tweetState.retweetNum}
                 </Text>
                 <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
                   件の引用
@@ -138,7 +147,7 @@ export default function TweetDetail({
                 style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}
               >
                 <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
-                  {favoriteNum}
+                  {tweetState.favoriteNum}
                 </Text>
                 <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>いいね</Text>
               </TouchableOpacity>
@@ -153,7 +162,7 @@ export default function TweetDetail({
               }}
             >
               <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
-                {retweetNum}
+                {tweetState.retweetNum}
               </Text>
               <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
                 ブックマーク
@@ -168,19 +177,37 @@ export default function TweetDetail({
                 borderBottomColor: colors.darkGray,
               }}
             >
-              <IconButton
-                icon={{ name: 'paw', family: 'FontAwesome6', size: 20, color: colors.lightGray }}
+              <AnimalIconButton
+                animalNum={tweetState.animalNum}
+                setAnimalNum={(num) => setTweetState((prev) => ({ ...prev, animalNum: num }))}
+                initialAnimalNum={initialAnimalNum}
+                isHideNumber
                 isJustifyContent
+                size={20}
               />
-              <RetweetIconButton retweetNum={retweetNum} isJustifyContent size={20} />
-              <FavIconButton favoriteNum={favoriteNum} isJustifyContent size={20} />
+              <RetweetIconButton
+                retweetNum={tweetState.retweetNum}
+                setRetweetNum={(num) => setTweetState((prev) => ({ ...prev, retweetNum: num }))}
+                initialRetweetNum={initialRetweetNum}
+                isHideNumber
+                isJustifyContent
+                size={20}
+              />
+              <FavIconButton
+                favoriteNum={tweetState.favoriteNum}
+                setFavoriteNum={(num) => setTweetState((prev) => ({ ...prev, favoriteNum: num }))}
+                initialFavoriteNum={initialFavoriteNum}
+                isHideNumber
+                isJustifyContent
+                size={20}
+              />
               <IconButton
                 icon={{
                   name: 'bookmark',
                   size: 20,
-                  color: bookmark ? colors.blue : colors.lightGray,
+                  color: tweetState.bookmark ? colors.blue : colors.lightGray,
                 }}
-                onPress={setBookmark}
+                onPress={handleBookmarkPress}
                 isJustifyContent
               />
               <IconButton
