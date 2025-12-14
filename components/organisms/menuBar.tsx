@@ -32,9 +32,11 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
   const router = useRouter();
   const [addTabModalVisible, setAddTabModalVisible] = useState(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [isVisibleAchievement, setIsVisibleAchievement] = useState<boolean>(false);
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [achievementHeight] = useState(new Animated.Value(0));
 
   // Zustandから状態を取得
   const setActiveTab = useTabStore((state) => state.setActiveTab);
@@ -115,6 +117,27 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
     }
     setDraggingIndex(null);
     setHoverIndex(null);
+  };
+
+  const toggleAchievement = () => {
+    if (isVisibleAchievement) {
+      // 閉じるアニメーション
+      Animated.timing(achievementHeight, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        setIsVisibleAchievement(false);
+      });
+    } else {
+      // 開くアニメーション
+      setIsVisibleAchievement(true);
+      Animated.timing(achievementHeight, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+    }
   };
 
   return (
@@ -199,14 +222,67 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                     flexDirection: 'row',
                     alignItems: 'center',
                   }}
-                  onPress={() => {
-                    console.log('Achievement pressed');
-                    onClose();
-                  }}
+                  onPress={toggleAchievement}
                 >
                   <Icon name={'trophy'} size={24} color={colors.black} />
                   <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>実績</Text>
                 </TouchableOpacity>
+                {/* 実績表 */}
+                {isVisibleAchievement && (
+                  <Animated.View
+                    style={{
+                      marginHorizontal: 24,
+                      marginBottom: 16,
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      gap: 12,
+                      overflow: 'hidden',
+                      maxHeight: achievementHeight.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 200],
+                      }),
+                      opacity: achievementHeight,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon name={'paw'} family="FontAwesome6" size={16} color={colors.black} />
+                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon name={'cat'} family="FontAwesome6" size={16} color={colors.black} />
+                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon name={'dog'} family="FontAwesome6" size={16} color={colors.black} />
+                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon name={'frog'} family="FontAwesome6" size={16} color={colors.black} />
+                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon name={'dragon'} family="FontAwesome6" size={16} color={colors.black} />
+                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon
+                        name={'kiwi-bird'}
+                        family="FontAwesome6"
+                        size={16}
+                        color={colors.black}
+                      />
+                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon name={'horse'} family="FontAwesome6" size={16} color={colors.black} />
+                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Icon name={'fish'} family="FontAwesome6" size={16} color={colors.black} />
+                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
+                    </View>
+                  </Animated.View>
+                )}
 
                 {/* タブリスト */}
                 <View style={{ flex: 1 }}>
