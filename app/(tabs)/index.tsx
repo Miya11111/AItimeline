@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import Tweet, { TweetType } from '@/components/organisms/tweet';
 import { useColors } from '@/hooks/use-colors';
-import { generateTweets } from '@/services/aiService';
 
 export const HomeLangJa = {
   welcome: 'こんにちは',
@@ -23,8 +22,8 @@ export default function HomeScreen() {
   useEffect(() => {
     const loadInitialTweets = async () => {
       try {
-        const initialTweets = await generateTweets(10); // 初回は10件生成
-        setTweets(initialTweets);
+        // const initialTweets = await generateTweets(10); // 初回は10件生成
+        // setTweets(initialTweets);
       } catch (error) {
         console.error('Failed to load initial tweets:', error);
       } finally {
@@ -38,9 +37,9 @@ export default function HomeScreen() {
     setRefreshing(true);
     try {
       // AIから新しいツイートを生成
-      const aiTweets = await generateTweets(7);
+      // const aiTweets = await generateTweets(7);
       // 既存のツイートの先頭に追加
-      setTweets([...aiTweets, ...tweets]);
+      // setTweets([...aiTweets, ...tweets]);
     } catch (error) {
       console.error('Failed to generate tweets:', error);
     } finally {
@@ -50,9 +49,17 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
         <ActivityIndicator size="large" color={colors.blue} />
-        <Text style={[styles.loadingText, { color: colors.black }]}>
+        <Text
+          style={{
+            marginTop: 16,
+            fontSize: 16,
+            textAlign: 'center',
+            lineHeight: 24,
+            color: colors.black,
+          }}
+        >
           ツイートを生成しています。{'\n'}しばらくお待ちください。
         </Text>
       </View>
@@ -84,18 +91,3 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-});

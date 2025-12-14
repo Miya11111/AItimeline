@@ -16,12 +16,7 @@ export type TweetType = {
   message: string;
 };
 
-export default function Tweet({
-  image,
-  name,
-  nameId,
-  message,
-}: TweetType) {
+export default function Tweet({ image, name, nameId, message }: TweetType) {
   const colors = useColors();
 
   // 初期値を生成（favoriteNumとretweetNumを相関させる）
