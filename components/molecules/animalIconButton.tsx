@@ -5,6 +5,7 @@ type AnimalIconButtonProps = {
   animalNum: number;
   setAnimalNum: (num: number) => void;
   initialAnimalNum: number;
+  isAnimaled: boolean;
   isHideNumber?: boolean;
   isJustifyContent?: boolean;
   size?: number;
@@ -14,13 +15,12 @@ export default function AnimalIconButton({
   animalNum,
   setAnimalNum,
   initialAnimalNum,
+  isAnimaled,
   isHideNumber,
   isJustifyContent,
   size = 16,
 }: AnimalIconButtonProps) {
   const colors = useColors();
-
-  const isAnimaled = animalNum > initialAnimalNum;
 
   // アニマルを押したときの挙動
   const handleAnimalPress = () => {

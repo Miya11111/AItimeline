@@ -1,8 +1,13 @@
 import { useColors } from '@/hooks/use-colors';
+import { mockTweetsTab2 } from '@/mocks/tweetMockData';
+import { useTabStore } from '@/stores/tabStore';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import {
   Animated,
   Dimensions,
   Modal,
+  ScrollView,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -10,6 +15,7 @@ import {
 } from 'react-native';
 import RoundImage from '../atoms/RoundImage';
 import { Icon } from '../atoms/icon';
+import AddTabModal from '../molecules/addTabModal';
 import SelectLangPulldown from '../molecules/selectLangPulldown';
 
 type MenuBarProps = {
@@ -22,17 +28,53 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
   const colors = useColors();
   const screenWidth = Dimensions.get('window').width;
   const menuWidth = screenWidth * 0.8; // 画面幅の80%
+  const router = useRouter();
+  const [addTabModalVisible, setAddTabModalVisible] = useState(false);
 
-  const tabArray = [
-    {
-      title: 'テスト1',
+  // Zustandから状態を取得
+  const setActiveTab = useTabStore((state) => state.setActiveTab);
+  const addTweetToTab = useTabStore((state) => state.addTweetToTab);
+  const getTweetsForTab = useTabStore((state) => state.getTweetsForTab);
+  const addTab = useTabStore((state) => state.addTab);
+
+  // 全タブを取得（tabOrderとtabsを直接監視）
+  const tabOrder = useTabStore((state) => state.tabOrder);
+  const tabs = useTabStore((state) => state.tabs);
+
+  // tabOrderとtabsから配列を生成
+  const tabArray = tabOrder.map((id) => tabs[id]).filter((tab) => tab !== undefined);
+
+  const handleTabPress = (tabId: string) => {
+    console.log(`${tabId} pressed`);
+
+    // タブ2を押した場合、モックデータを追加（初回のみ）
+    if (tabId === 'tab2' && getTweetsForTab('tab2').length === 0) {
+      mockTweetsTab2.forEach((tweet) => {
+        addTweetToTab('tab2', tweet);
+      });
+    }
+
+    // アクティブタブを変更
+    setActiveTab(tabId);
+
+    // メニューを閉じて画面遷移
+    onClose();
+    router.push('/(tabs)');
+  };
+
+  const handleAddTab = (tabName: string) => {
+    // 新しいタブIDを生成（既存のタブ数 + 1）
+    const newTabId = `tab${tabArray.length + 1}`;
+
+    // Zustandに新しいタブを追加
+    addTab({
+      id: newTabId,
+      title: tabName,
       icon: 'information-circle-outline',
-    },
-    {
-      title: 'テスト2',
-      icon: 'information-circle-outline',
-    },
-  ];
+    });
+
+    console.log(`New tab added: ${tabName} (${newTabId})`);
+  };
 
   return (
     <Modal visible={visible} transparent={true} animationType="none" onRequestClose={onClose}>
@@ -119,39 +161,44 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                   <Icon name={'trophy'} size={24} color={colors.black} />
                   <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>実績</Text>
                 </TouchableOpacity>
-                {tabArray.map((tab, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={{
-                      paddingVertical: 20,
-                      paddingHorizontal: 20,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                    }}
-                    onPress={() => {
-                      console.log(`${tab.title} pressed`);
-                      onClose();
-                    }}
-                  >
-                    <Icon name={tab.icon} size={28} color={colors.black} />
-                    <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>
-                      {tab.title}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-                {/* 追加 */}
-                <View style={{ borderWidth: 1, borderColor: colors.darkGray }} />
-                <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    paddingVertical: 16,
-                  }}
-                >
-                  <Icon name={'add-circle'} size={20} color={colors.blue} />
-                  <Text style={{ color: colors.blue, marginLeft: 8, fontSize: 16 }}>追加</Text>
-                </TouchableOpacity>
+
+                {/* タブリストと追加ボタン */}
+                <View style={{ flex: 1 }}>
+                  <ScrollView>
+                    {tabArray.map((tab, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={{
+                          paddingVertical: 20,
+                          paddingHorizontal: 20,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                        }}
+                        onPress={() => handleTabPress(tab.id)}
+                      >
+                        <Icon name={tab.icon} size={28} color={colors.black} />
+                        <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>
+                          {tab.title}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+
+                    {/* 追加ボタン */}
+                    <View style={{ borderTopWidth: 1, borderTopColor: colors.darkGray }} />
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingVertical: 16,
+                      }}
+                      onPress={() => setAddTabModalVisible(true)}
+                    >
+                      <Icon name={'add-circle'} size={20} color={colors.blue} />
+                      <Text style={{ color: colors.blue, marginLeft: 8, fontSize: 16 }}>追加</Text>
+                    </TouchableOpacity>
+                  </ScrollView>
+                </View>
 
                 {/* 言語選択 */}
                 <View style={{ marginTop: 'auto', marginBottom: 24 }}>
@@ -162,6 +209,13 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
+
+      {/* タブ追加モーダル */}
+      <AddTabModal
+        visible={addTabModalVisible}
+        onClose={() => setAddTabModalVisible(false)}
+        onConfirm={handleAddTab}
+      />
     </Modal>
   );
 }

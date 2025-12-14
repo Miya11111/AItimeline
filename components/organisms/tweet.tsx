@@ -8,49 +8,71 @@ import AnimalIconButton from '../molecules/animalIconButton';
 import FavIconButton from '../molecules/favIconButton';
 import RetweetIconButton from '../molecules/retweetButton';
 import TweetDetail from './tweetDetail';
+import { useTabStore } from '@/stores/tabStore';
 
 export type TweetType = {
+  id: number;
   image: ImageSourcePropType;
   name: string;
   nameId: string;
   message: string;
+  retweetNum: number;
+  favoriteNum: number;
+  impressionNum: number;
+  animalNum: number;
+  isLiked: boolean;
+  isRetweeted: boolean;
+  isBookmarked: boolean;
+  isAnimaled: boolean;
 };
 
-export default function Tweet({ image, name, nameId, message }: TweetType) {
+export default function Tweet({
+  id,
+  image,
+  name,
+  nameId,
+  message,
+  retweetNum,
+  favoriteNum,
+  impressionNum,
+  animalNum,
+  isLiked,
+  isRetweeted,
+  isBookmarked,
+  isAnimaled,
+}: TweetType) {
   const colors = useColors();
+  const updateTweetInteraction = useTabStore((state) => state.updateTweetInteraction);
 
-  // 初期値を生成（favoriteNumとretweetNumを相関させる）
-  const [initialValues] = useState(() => {
-    const baseFavoriteNum = Math.floor(Math.random() * 10001); // 0-10000
-    // retweetNumはfavoriteNumの5-20%程度にする
-    const retweetRatio = 0.05 + Math.random() * 0.15; // 5-20%
-    const baseRetweetNum = Math.floor(baseFavoriteNum * retweetRatio);
+  // Zustandから最新の状態を個別に取得（パフォーマンスとリアクティビティのため）
+  const currentRetweetNum = useTabStore((state) => state.tweets[id]?.retweetNum ?? retweetNum);
+  const currentFavoriteNum = useTabStore((state) => state.tweets[id]?.favoriteNum ?? favoriteNum);
+  const currentImpressionNum = useTabStore(
+    (state) => state.tweets[id]?.impressionNum ?? impressionNum
+  );
+  const currentAnimalNum = useTabStore((state) => state.tweets[id]?.animalNum ?? animalNum);
+  const currentIsLiked = useTabStore((state) => state.tweets[id]?.isLiked ?? isLiked);
+  const currentIsRetweeted = useTabStore((state) => state.tweets[id]?.isRetweeted ?? isRetweeted);
+  const currentIsBookmarked = useTabStore(
+    (state) => state.tweets[id]?.isBookmarked ?? isBookmarked
+  );
+  const currentIsAnimaled = useTabStore((state) => state.tweets[id]?.isAnimaled ?? isAnimaled);
 
-    return {
-      animalNum: 0,
-      retweetNum: baseRetweetNum,
-      favoriteNum: baseFavoriteNum,
-    };
-  });
-
-  const [tweetState, setTweetState] = useState({
-    animalNum: initialValues.animalNum,
-    retweetNum: initialValues.retweetNum,
-    favoriteNum: initialValues.favoriteNum,
-    impressionNum: 0,
-    bookmark: false,
-  });
-
-  const initialAnimalNum = initialValues.animalNum;
-  const initialRetweetNum = initialValues.retweetNum;
-  const initialFavoriteNum = initialValues.favoriteNum;
+  const initialAnimalNum = animalNum;
+  const initialRetweetNum = retweetNum;
+  const initialFavoriteNum = favoriteNum;
 
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [slideAnim] = useState(new Animated.Value(400));
 
   //ブックマークを押した際の挙動
   const handleBookmarkPress = () => {
-    setTweetState((prev) => ({ ...prev, bookmark: !prev.bookmark }));
+    const newBookmarkState = !currentIsBookmarked;
+
+    // Zustandに保存
+    updateTweetInteraction(id, {
+      isBookmarked: newBookmarkState,
+    });
   };
 
   // ツイートの詳細モーダルを表示
@@ -107,23 +129,44 @@ export default function Tweet({ image, name, nameId, message }: TweetType) {
             >
               <View style={{ flex: 1 }}>
                 <AnimalIconButton
-                  animalNum={tweetState.animalNum}
-                  setAnimalNum={(num) => setTweetState((prev) => ({ ...prev, animalNum: num }))}
+                  animalNum={currentAnimalNum}
+                  setAnimalNum={(num) => {
+                    // Zustandに保存
+                    updateTweetInteraction(id, {
+                      animalNum: num,
+                      isAnimaled: num > initialAnimalNum,
+                    });
+                  }}
                   initialAnimalNum={initialAnimalNum}
+                  isAnimaled={currentIsAnimaled}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <RetweetIconButton
-                  retweetNum={tweetState.retweetNum}
-                  setRetweetNum={(num) => setTweetState((prev) => ({ ...prev, retweetNum: num }))}
+                  retweetNum={currentRetweetNum}
+                  setRetweetNum={(num) => {
+                    // Zustandに保存
+                    updateTweetInteraction(id, {
+                      retweetNum: num,
+                      isRetweeted: num > initialRetweetNum,
+                    });
+                  }}
                   initialRetweetNum={initialRetweetNum}
+                  isRetweet={currentIsRetweeted}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <FavIconButton
-                  favoriteNum={tweetState.favoriteNum}
-                  setFavoriteNum={(num) => setTweetState((prev) => ({ ...prev, favoriteNum: num }))}
+                  favoriteNum={currentFavoriteNum}
+                  setFavoriteNum={(num) => {
+                    // Zustandに保存
+                    updateTweetInteraction(id, {
+                      favoriteNum: num,
+                      isLiked: num > initialFavoriteNum,
+                    });
+                  }}
                   initialFavoriteNum={initialFavoriteNum}
+                  isFavorited={currentIsLiked}
                 />
               </View>
               <View style={{ flex: 1 }}>
@@ -134,7 +177,7 @@ export default function Tweet({ image, name, nameId, message }: TweetType) {
                     size: 16,
                     color: colors.lightGray,
                   }}
-                  number={tweetState.impressionNum}
+                  number={currentImpressionNum}
                 />
               </View>
               <View style={{ flexDirection: 'row', gap: 4 }}>
@@ -145,7 +188,7 @@ export default function Tweet({ image, name, nameId, message }: TweetType) {
                   <Icon
                     name="bookmark"
                     size={16}
-                    color={tweetState.bookmark ? colors.blue : colors.lightGray}
+                    color={currentIsBookmarked ? colors.blue : colors.lightGray}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -170,8 +213,42 @@ export default function Tweet({ image, name, nameId, message }: TweetType) {
         name={name}
         nameId={nameId}
         message={message}
-        tweetState={tweetState}
-        setTweetState={setTweetState}
+        tweetState={{
+          animalNum: currentAnimalNum,
+          retweetNum: currentRetweetNum,
+          favoriteNum: currentFavoriteNum,
+          impressionNum: currentImpressionNum,
+          bookmark: currentIsBookmarked,
+          isLiked: currentIsLiked,
+          isRetweeted: currentIsRetweeted,
+          isAnimaled: currentIsAnimaled,
+        }}
+        setTweetState={(updater) => {
+          const newState =
+            typeof updater === 'function'
+              ? updater({
+                  animalNum: currentAnimalNum,
+                  retweetNum: currentRetweetNum,
+                  favoriteNum: currentFavoriteNum,
+                  impressionNum: currentImpressionNum,
+                  bookmark: currentIsBookmarked,
+                  isLiked: currentIsLiked,
+                  isRetweeted: currentIsRetweeted,
+                  isAnimaled: currentIsAnimaled,
+                })
+              : updater;
+
+          // すべてZustandに保存
+          updateTweetInteraction(id, {
+            animalNum: newState.animalNum,
+            retweetNum: newState.retweetNum,
+            favoriteNum: newState.favoriteNum,
+            isLiked: newState.favoriteNum > initialFavoriteNum,
+            isRetweeted: newState.retweetNum > initialRetweetNum,
+            isAnimaled: newState.animalNum > initialAnimalNum,
+            isBookmarked: newState.bookmark,
+          });
+        }}
         initialAnimalNum={initialAnimalNum}
         initialRetweetNum={initialRetweetNum}
         initialFavoriteNum={initialFavoriteNum}

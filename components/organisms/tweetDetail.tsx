@@ -12,6 +12,9 @@ type TweetState = {
   favoriteNum: number;
   impressionNum: number;
   bookmark: boolean;
+  isLiked: boolean;
+  isRetweeted: boolean;
+  isAnimaled: boolean;
 };
 
 type TweetDetailProps = {
@@ -183,6 +186,7 @@ export default function TweetDetail({
                 animalNum={tweetState.animalNum}
                 setAnimalNum={(num) => setTweetState((prev) => ({ ...prev, animalNum: num }))}
                 initialAnimalNum={initialAnimalNum}
+                isAnimaled={tweetState.isAnimaled}
                 isHideNumber
                 isJustifyContent
                 size={20}
@@ -191,6 +195,7 @@ export default function TweetDetail({
                 retweetNum={tweetState.retweetNum}
                 setRetweetNum={(num) => setTweetState((prev) => ({ ...prev, retweetNum: num }))}
                 initialRetweetNum={initialRetweetNum}
+                isRetweet={tweetState.isRetweeted}
                 isHideNumber
                 isJustifyContent
                 size={20}
@@ -199,6 +204,7 @@ export default function TweetDetail({
                 favoriteNum={tweetState.favoriteNum}
                 setFavoriteNum={(num) => setTweetState((prev) => ({ ...prev, favoriteNum: num }))}
                 initialFavoriteNum={initialFavoriteNum}
+                isFavorited={tweetState.isLiked}
                 isHideNumber
                 isJustifyContent
                 size={20}

@@ -1,4 +1,4 @@
-import { TweetType } from '@/components/organisms/tweet';
+import { Tweet } from '@/stores/tabStore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
@@ -21,7 +21,7 @@ async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function generateTweets(count: number = 5): Promise<TweetType[]> {
+export async function generateTweets(count: number = 5, startId: number = 1): Promise<Tweet[]> {
   // 429エラー時のフォールバックモデル
   const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
 
@@ -82,11 +82,28 @@ JSONのみを返してください。他の説明は不要です。`;
         allTweets = parsed.tweets;
       }
 
-      // 画像はassetsからランダムに割り当て
-      const tweets: TweetType[] = allTweets.map((tweet: any) => ({
-        ...tweet,
-        image: getRandomAvatar(),
-      }));
+      // 画像はassetsからランダムに割り当て、Tweet型に合わせて変換
+      const tweets: Tweet[] = allTweets.map((tweet: any, index: number) => {
+        const baseFavoriteNum = Math.floor(Math.random() * 10001); // 0-10000
+        const retweetRatio = 0.05 + Math.random() * 0.15; // 5-20%
+        const baseRetweetNum = Math.floor(baseFavoriteNum * retweetRatio);
+
+        return {
+          id: startId + index,
+          image: getRandomAvatar(),
+          name: tweet.name,
+          nameId: tweet.nameId,
+          message: tweet.message,
+          retweetNum: baseRetweetNum,
+          favoriteNum: baseFavoriteNum,
+          impressionNum: Math.floor(baseFavoriteNum * (1.5 + Math.random() * 0.5)), // いいねの1.5-2倍
+          animalNum: 0,
+          isLiked: false,
+          isRetweeted: false,
+          isBookmarked: false,
+          isAnimaled: false,
+        };
+      });
 
       return tweets;
     } catch (error) {
@@ -106,10 +123,19 @@ JSONのみを返してください。他の説明は不要です。`;
   // すべてのリトライが失敗した場合
   return [
     {
+      id: startId,
       image: require('@/assets/icon1.png'),
       name: 'AIユーザー',
       nameId: 'ai_user',
       message: 'ツイート生成に失敗しました。しばらく待ってから再試行してください。',
+      retweetNum: 0,
+      favoriteNum: 0,
+      impressionNum: 0,
+      animalNum: 0,
+      isLiked: false,
+      isRetweeted: false,
+      isBookmarked: false,
+      isAnimaled: false,
     },
   ];
 }

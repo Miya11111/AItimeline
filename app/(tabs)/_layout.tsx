@@ -7,6 +7,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import MenuBar from '@/components/organisms/menuBar';
 import { useColors } from '@/hooks/use-colors';
 import { t } from 'i18next';
+import { useTabStore } from '@/stores/tabStore';
 
 export const TabLayoutLangJa = {
   home: 'ホーム',
@@ -22,6 +23,10 @@ export default function TabLayout() {
   const screenWidth = Dimensions.get('window').width;
   const menuWidth = screenWidth * 0.75;
   const menuSlideAnim = useRef(new Animated.Value(-menuWidth)).current;
+
+  // Zustandからアクティブタブを取得
+  const getActiveTab = useTabStore((state) => state.getActiveTab);
+  const activeTab = getActiveTab();
 
   const openMenu = () => {
     setMenuVisible(true);
@@ -61,7 +66,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: t('tabLayout.home'),
+            title: activeTab?.title || t('tabLayout.home'),
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
             headerLeft: () => (
               <TouchableOpacity

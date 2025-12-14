@@ -5,6 +5,7 @@ type RetweetIconButtonProps = {
   retweetNum: number;
   setRetweetNum: (retweet: number) => void;
   initialRetweetNum: number;
+  isRetweet: boolean;
   isHideNumber?: boolean;
   isJustifyContent?: boolean;
   size?: number;
@@ -14,13 +15,12 @@ export default function RetweetIconButton({
   retweetNum,
   setRetweetNum,
   initialRetweetNum,
+  isRetweet,
   isHideNumber,
   isJustifyContent,
   size = 16,
 }: RetweetIconButtonProps) {
   const colors = useColors();
-
-  const isRetweet = retweetNum > initialRetweetNum;
 
   // リツイートを押したときの挙動
   const handleRetweetPress = () => {
