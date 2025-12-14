@@ -21,7 +21,11 @@ async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function generateTweets(count: number = 5, startId: number = 1): Promise<Tweet[]> {
+export async function generateTweets(
+  count: number = 5,
+  startId: number = 1,
+  tabTitle?: string
+): Promise<Tweet[]> {
   // 429エラー時のフォールバックモデル
   const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
 
@@ -31,7 +35,10 @@ export async function generateTweets(count: number = 5, startId: number = 1): Pr
     try {
       const model = genAI.getGenerativeModel({ model: modelName });
 
-      const prompt = `${count}個のランダムなTwitterユーザーとそのツイートを生成してください。
+      const topicInstruction = tabTitle
+        ? `「${tabTitle}」に関する最新情報を検索し、それに関する`
+        : '';
+      const prompt = `${count}個の、${topicInstruction}ランダムなTwitterユーザーとそのツイートを生成してください。
 各ユーザーは以下の形式のJSONオブジェクトで返してください：
 {
   "tweets": [
@@ -43,9 +50,11 @@ export async function generateTweets(count: number = 5, startId: number = 1): Pr
   ]
 }
 
-ツイート内容は現実のTwitterに即して、キラキラしすぎず、絵文字の使用も最小限にしてください。
+ツイート内容は現実のTwitterに即して、キラキラしすぎず、絵文字の使用も最小限にしてください（ツイート内容に応じて使っても構いません）。
 場合によって、「○○、△△すぎる」などのTwitterでよく使われる構文も使用してください。
 また、抽象的な名詞はできるだけ避け、具体的な商品名などの固有名詞を使用してください。固有名詞は鍵括弧で括らないでください。
+ツイート内容は主に短文で生成してください。ランダムに、単語のみ、長文などの他の形式も混ぜてください。
+短文や単語のみの場合は句読点をつけないでください。
 
 JSONのみを返してください。他の説明は不要です。`;
 
@@ -53,34 +62,53 @@ JSONのみを返してください。他の説明は不要です。`;
       const response = result.response;
       const text = response.text();
 
+      console.log('[generateTweets] Raw AI response:', text);
+
       // JSONを抽出（```json ```で囲まれている場合やマークダウンに対応）
       let jsonText = text;
 
       // マークダウンのコードブロックを削除
       jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
 
-      // JSONを抽出（配列またはオブジェクト）
-      const jsonMatch = jsonText.match(/[\[\{][\s\S]*[\]\}]/);
-      jsonText = jsonMatch ? jsonMatch[0] : '{"tweets":[]}';
-
-      // 余分な改行やスペースを削除
-      jsonText = jsonText.trim();
-
-      const parsed = JSON.parse(jsonText);
-
-      // Geminiが配列形式で返した場合の処理
+      // 複数のJSONオブジェクトが連続している場合、それぞれをパースして結合
       let allTweets: any[] = [];
-      if (Array.isArray(parsed)) {
-        // 各要素からtweetsを抽出して結合
-        parsed.forEach((item: any) => {
-          if (item.tweets && Array.isArray(item.tweets)) {
-            allTweets = allTweets.concat(item.tweets);
-          }
-        });
-      } else if (parsed.tweets && Array.isArray(parsed.tweets)) {
-        // オブジェクト形式の場合
-        allTweets = parsed.tweets;
+
+      // ネストした括弧に対応するため、手動でJSONオブジェクトを分割
+      let depth = 0;
+      let currentJson = '';
+      const jsonObjects: string[] = [];
+
+      for (let i = 0; i < jsonText.length; i++) {
+        const char = jsonText[i];
+
+        if (char === '{') {
+          depth++;
+        } else if (char === '}') {
+          depth--;
+        }
+
+        currentJson += char;
+
+        // トップレベルのオブジェクトが閉じられた
+        if (depth === 0 && currentJson.trim().length > 0) {
+          jsonObjects.push(currentJson.trim());
+          currentJson = '';
+        }
       }
+
+      // 各JSONオブジェクトをパース
+      jsonObjects.forEach((jsonObj) => {
+        try {
+          const parsed = JSON.parse(jsonObj);
+          if (parsed.tweets && Array.isArray(parsed.tweets)) {
+            allTweets = allTweets.concat(parsed.tweets);
+          }
+        } catch (e) {
+          console.warn('[generateTweets] Failed to parse JSON object:', e);
+        }
+      });
+
+      console.log('[generateTweets] Extracted tweets count:', allTweets.length);
 
       // 画像はassetsからランダムに割り当て、Tweet型に合わせて変換
       const tweets: Tweet[] = allTweets.map((tweet: any, index: number) => {
@@ -109,6 +137,9 @@ JSONのみを返してください。他の説明は不要です。`;
     } catch (error) {
       // 429エラーの場合は次のモデルへフォールバック
       const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[generateTweets] Model ${modelName} failed:`, errorMessage);
+      console.error('[generateTweets] Full error:', error);
+
       if (errorMessage.includes('429') && modelIndex < models.length - 1) {
         // 次のモデルを試す前に少し待機
         await sleep(2000);

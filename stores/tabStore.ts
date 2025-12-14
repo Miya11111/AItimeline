@@ -60,13 +60,13 @@ export const useTabStore = create<TabStore>((set, get) => ({
   tabs: {
     tab1: {
       id: 'tab1',
-      title: 'テスト1',
+      title: '日常の話題',
       icon: 'information-circle-outline',
       tweetIds: [],
     },
     tab2: {
       id: 'tab2',
-      title: 'テスト2',
+      title: '生物雑学',
       icon: 'information-circle-outline',
       tweetIds: [],
     },

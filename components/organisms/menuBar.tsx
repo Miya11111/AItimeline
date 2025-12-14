@@ -1,5 +1,4 @@
 import { useColors } from '@/hooks/use-colors';
-import { mockTweetsTab2 } from '@/mocks/tweetMockData';
 import { useTabStore } from '@/stores/tabStore';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -30,12 +29,14 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
   const menuWidth = screenWidth * 0.8; // 画面幅の80%
   const router = useRouter();
   const [addTabModalVisible, setAddTabModalVisible] = useState(false);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
   // Zustandから状態を取得
   const setActiveTab = useTabStore((state) => state.setActiveTab);
   const addTweetToTab = useTabStore((state) => state.addTweetToTab);
   const getTweetsForTab = useTabStore((state) => state.getTweetsForTab);
   const addTab = useTabStore((state) => state.addTab);
+  const removeTab = useTabStore((state) => state.removeTab);
 
   // 全タブを取得（tabOrderとtabsを直接監視）
   const tabOrder = useTabStore((state) => state.tabOrder);
@@ -46,13 +47,6 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
 
   const handleTabPress = (tabId: string) => {
     console.log(`${tabId} pressed`);
-
-    // タブ2を押した場合、モックデータを追加（初回のみ）
-    if (tabId === 'tab2' && getTweetsForTab('tab2').length === 0) {
-      mockTweetsTab2.forEach((tweet) => {
-        addTweetToTab('tab2', tweet);
-      });
-    }
 
     // アクティブタブを変更
     setActiveTab(tabId);
@@ -129,7 +123,8 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                       </Text>
                       <Text style={{ color: colors.lightGray }}>@test_user</Text>
                     </View>
-                    <TouchableOpacity onPress={() => console.log('Edit pressed')}>
+                    {/* 編集アイコン */}
+                    <TouchableOpacity onPress={() => setIsEdit(!isEdit)}>
                       <Icon name="create-outline" size={24} color={colors.black} />
                     </TouchableOpacity>
                   </View>
@@ -145,7 +140,7 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                   </View>
                 </View>
 
-                {/* メニュー項目 */}
+                {/* 実績 */}
                 <TouchableOpacity
                   style={{
                     paddingVertical: 20,
@@ -162,7 +157,26 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                   <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>実績</Text>
                 </TouchableOpacity>
 
-                {/* タブリストと追加ボタン */}
+                {/* ブックマーク */}
+                <TouchableOpacity
+                  style={{
+                    paddingVertical: 20,
+                    paddingHorizontal: 20,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                  onPress={() => {
+                    console.log('Bookmark pressed');
+                    onClose();
+                  }}
+                >
+                  <Icon name={'bookmark'} size={24} color={colors.black} />
+                  <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>
+                    ブックマーク
+                  </Text>
+                </TouchableOpacity>
+
+                {/* タブリスト */}
                 <View style={{ flex: 1 }}>
                   <ScrollView>
                     {tabArray.map((tab, index) => (
@@ -173,13 +187,21 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                           paddingHorizontal: 20,
                           flexDirection: 'row',
                           alignItems: 'center',
+                          justifyContent: 'space-between',
                         }}
                         onPress={() => handleTabPress(tab.id)}
                       >
-                        <Icon name={tab.icon} size={28} color={colors.black} />
-                        <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>
-                          {tab.title}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                          <Icon name={tab.icon} size={28} color={colors.black} />
+                          <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>
+                            {tab.title}
+                          </Text>
+                        </View>
+                        {isEdit && (
+                          <TouchableOpacity onPress={() => removeTab(tab.id)}>
+                            <Icon name="close-circle" size={24} color={colors.red} />
+                          </TouchableOpacity>
+                        )}
                       </TouchableOpacity>
                     ))}
 

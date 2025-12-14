@@ -24,6 +24,7 @@ export default function HomeScreen() {
   const activeTabId = useTabStore((state) => state.activeTabId);
   const getTweetsForTab = useTabStore((state) => state.getTweetsForTab);
   const addTweetToTab = useTabStore((state) => state.addTweetToTab);
+  const getActiveTab = useTabStore((state) => state.getActiveTab);
 
   // アクティブタブのツイートを取得（新しいものが上に来るように逆順）
   const tweets = getTweetsForTab(activeTabId).reverse();
@@ -52,8 +53,12 @@ export default function HomeScreen() {
       const currentTweets = getTweetsForTab(activeTabId);
       const maxId = currentTweets.length > 0 ? Math.max(...currentTweets.map((t) => t.id)) : 0;
 
-      // AIから新しいツイートを生成（IDは既存の最大値+1から開始）
-      const aiTweets = await generateTweets(7, maxId + 1);
+      // 現在のタブのタイトルを取得
+      const activeTab = getActiveTab();
+      const tabTitle = activeTab?.title;
+
+      // AIから新しいツイートを生成（IDは既存の最大値+1から開始、タブタイトルを渡す）
+      const aiTweets = await generateTweets(7, maxId + 1, tabTitle);
 
       // 現在のアクティブタブに追加
       aiTweets.forEach((tweet) => {
