@@ -26,6 +26,7 @@ export default function HomeScreen() {
   const addTweetToTab = useTabStore((state) => state.addTweetToTab);
   const getActiveTab = useTabStore((state) => state.getActiveTab);
   const getBookmarkedTweets = useTabStore((state) => state.getBookmarkedTweets);
+  const isHydrated = useTabStore((state) => state.isHydrated);
 
   // アクティブタブのツイートを取得（新しいものが上に来るように逆順）
   // 特別なタブID 'bookmarks' の場合はブックマークされたツイートを表示
@@ -34,14 +35,19 @@ export default function HomeScreen() {
       ? getBookmarkedTweets().reverse()
       : getTweetsForTab(activeTabId).reverse();
 
-  // 初回読み込み時にモックデータを読み込む
+  // 初回読み込み時にモックデータを読み込む（hydrateが完了してから）
   useEffect(() => {
+    if (!isHydrated) return;
+
     const loadInitialTweets = async () => {
       try {
-        // tab1にモックデータを追加
-        mockTweetsTab1.forEach((tweet) => {
-          addTweetToTab('tab1', tweet);
-        });
+        // tab1が空の場合のみモックデータを追加
+        const tab1Tweets = getTweetsForTab('tab1');
+        if (tab1Tweets.length === 0) {
+          mockTweetsTab1.forEach((tweet) => {
+            addTweetToTab('tab1', tweet);
+          });
+        }
       } catch (error) {
         console.error('Failed to load initial tweets:', error);
       } finally {
@@ -49,7 +55,7 @@ export default function HomeScreen() {
       }
     };
     loadInitialTweets();
-  }, []);
+  }, [isHydrated]);
 
   const onRefresh = async () => {
     setRefreshing(true);

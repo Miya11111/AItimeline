@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
 export type Tweet = {
@@ -29,6 +30,7 @@ type TabStore = {
   tweets: { [tweetId: number]: Tweet }; // 全ツイートを正規化して保存
   activeTabId: string;
   tabOrder: string[]; // タブの順序を保持
+  isHydrated: boolean; // ストレージからの読み込みが完了したか
 
   addTweetToTab: (tabId: string, tweet: Tweet) => void;
   removeTweetFromTab: (tabId: string, tweetId: number) => void;
@@ -55,32 +57,46 @@ type TabStore = {
       >
     >
   ) => void;
+  hydrate: () => Promise<void>;
 };
 
-export const useTabStore = create<TabStore>((set, get) => ({
-  tabs: {
-    bookmarks: {
-      id: 'bookmarks',
-      title: 'ブックマーク',
-      icon: 'bookmark',
-      tweetIds: [], // ブックマークタブは動的に取得するため空
-    },
-    tab1: {
-      id: 'tab1',
-      title: '日常の話題',
-      icon: 'information-circle-outline',
-      tweetIds: [],
-    },
-    tab2: {
-      id: 'tab2',
-      title: '生物雑学',
-      icon: 'information-circle-outline',
-      tweetIds: [],
-    },
+// ストレージキー
+const STORAGE_KEYS = {
+  TABS: '@tabStore/tabs',
+  TAB_ORDER: '@tabStore/tabOrder',
+  BOOKMARKED_TWEETS: '@tabStore/bookmarkedTweets',
+};
+
+// デフォルトタブ
+const DEFAULT_TABS = {
+  bookmarks: {
+    id: 'bookmarks',
+    title: 'ブックマーク',
+    icon: 'bookmark',
+    tweetIds: [],
   },
+  tab1: {
+    id: 'tab1',
+    title: '日常の話題',
+    icon: 'information-circle-outline',
+    tweetIds: [],
+  },
+  tab2: {
+    id: 'tab2',
+    title: '生物雑学',
+    icon: 'information-circle-outline',
+    tweetIds: [],
+  },
+};
+
+const DEFAULT_TAB_ORDER = ['bookmarks', 'tab1', 'tab2'];
+
+export const useTabStore = create<TabStore>((set, get) => ({
+  tabs: DEFAULT_TABS,
   tweets: {},
   activeTabId: 'tab1',
-  tabOrder: ['bookmarks', 'tab1', 'tab2'],
+  tabOrder: DEFAULT_TAB_ORDER,
+  isHydrated: false,
 
   addTweetToTab: (tabId, tweet) =>
     set((state) => {
@@ -179,28 +195,43 @@ export const useTabStore = create<TabStore>((set, get) => ({
       const tweet = state.tweets[tweetId];
       if (!tweet) return state;
 
-      return {
-        tweets: {
-          ...state.tweets,
-          [tweetId]: {
-            ...tweet,
-            ...updates,
-          },
+      const newTweets = {
+        ...state.tweets,
+        [tweetId]: {
+          ...tweet,
+          ...updates,
         },
+      };
+
+      // ブックマーク状態が変更された場合は永続化
+      if ('isBookmarked' in updates) {
+        saveBookmarkedTweets(newTweets);
+      }
+
+      return {
+        tweets: newTweets,
       };
     }),
 
   addTab: (tab) =>
-    set((state) => ({
-      tabs: {
+    set((state) => {
+      const newTabs = {
         ...state.tabs,
         [tab.id]: {
           ...tab,
           tweetIds: [],
         },
-      },
-      tabOrder: [...state.tabOrder, tab.id],
-    })),
+      };
+      const newTabOrder = [...state.tabOrder, tab.id];
+
+      // 永続化
+      saveTabs(newTabs, newTabOrder);
+
+      return {
+        tabs: newTabs,
+        tabOrder: newTabOrder,
+      };
+    }),
 
   removeTab: (tabId) =>
     set((state) => {
@@ -215,10 +246,80 @@ export const useTabStore = create<TabStore>((set, get) => ({
       // アクティブタブが削除される場合は、次のタブをアクティブにする
       const newActiveTabId = state.activeTabId === tabId ? newTabOrder[0] || '' : state.activeTabId;
 
-      return {
+      const newState = {
         tabs: newTabs,
         tabOrder: newTabOrder,
         activeTabId: newActiveTabId,
       };
+
+      // 永続化
+      saveTabs(newTabs, newTabOrder);
+
+      return newState;
     }),
+
+  hydrate: async () => {
+    try {
+      // タブとタブ順序を読み込み
+      const [tabsJson, tabOrderJson, bookmarkedTweetsJson] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.TABS),
+        AsyncStorage.getItem(STORAGE_KEYS.TAB_ORDER),
+        AsyncStorage.getItem(STORAGE_KEYS.BOOKMARKED_TWEETS),
+      ]);
+
+      const loadedTabs = tabsJson ? JSON.parse(tabsJson) : null;
+      const loadedTabOrder = tabOrderJson ? JSON.parse(tabOrderJson) : null;
+      const loadedBookmarkedTweets = bookmarkedTweetsJson ? JSON.parse(bookmarkedTweetsJson) : [];
+
+      // ブックマークタブが存在することを保証
+      const tabs = loadedTabs || DEFAULT_TABS;
+      if (!tabs.bookmarks) {
+        tabs.bookmarks = DEFAULT_TABS.bookmarks;
+      }
+
+      const tabOrder = loadedTabOrder || DEFAULT_TAB_ORDER;
+      if (!tabOrder.includes('bookmarks')) {
+        tabOrder.unshift('bookmarks');
+      }
+
+      // ブックマークされたツイートを復元（既存のツイートとマージ）
+      const currentState = get();
+      const tweets: { [tweetId: number]: Tweet } = { ...currentState.tweets };
+      loadedBookmarkedTweets.forEach((tweet: Tweet) => {
+        tweets[tweet.id] = tweet;
+      });
+
+      set({
+        tabs,
+        tabOrder,
+        tweets,
+        isHydrated: true,
+      });
+    } catch (error) {
+      console.error('Failed to load from storage:', error);
+      set({ isHydrated: true });
+    }
+  },
 }));
+
+// ヘルパー関数: タブとタブ順序を保存
+const saveTabs = async (tabs: { [tabId: string]: Tab }, tabOrder: string[]) => {
+  try {
+    await Promise.all([
+      AsyncStorage.setItem(STORAGE_KEYS.TABS, JSON.stringify(tabs)),
+      AsyncStorage.setItem(STORAGE_KEYS.TAB_ORDER, JSON.stringify(tabOrder)),
+    ]);
+  } catch (error) {
+    console.error('Failed to save tabs:', error);
+  }
+};
+
+// ヘルパー関数: ブックマークされたツイートを保存
+const saveBookmarkedTweets = async (tweets: { [tweetId: number]: Tweet }) => {
+  try {
+    const bookmarkedTweets = Object.values(tweets).filter((tweet) => tweet.isBookmarked);
+    await AsyncStorage.setItem(STORAGE_KEYS.BOOKMARKED_TWEETS, JSON.stringify(bookmarkedTweets));
+  } catch (error) {
+    console.error('Failed to save bookmarked tweets:', error);
+  }
+};
