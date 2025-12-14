@@ -57,6 +57,8 @@ type TabStore = {
       >
     >
   ) => void;
+  reorderTabs: (newOrder: string[]) => void;
+  updateTabTitle: (tabId: string, newTitle: string) => void;
   hydrate: () => Promise<void>;
 };
 
@@ -256,6 +258,51 @@ export const useTabStore = create<TabStore>((set, get) => ({
       saveTabs(newTabs, newTabOrder);
 
       return newState;
+    }),
+
+  reorderTabs: (newOrder) =>
+    set((state) => {
+      // ブックマークタブは常に先頭に固定
+      const bookmarkIndex = newOrder.indexOf('bookmarks');
+      if (bookmarkIndex !== -1 && bookmarkIndex !== 0) {
+        // ブックマークタブを削除して先頭に移動
+        const reorderedTabs = newOrder.filter((id) => id !== 'bookmarks');
+        newOrder = ['bookmarks', ...reorderedTabs];
+      } else if (bookmarkIndex === -1) {
+        // ブックマークタブが存在しない場合は先頭に追加
+        newOrder = ['bookmarks', ...newOrder];
+      }
+
+      // 永続化
+      saveTabs(state.tabs, newOrder);
+
+      return {
+        tabOrder: newOrder,
+      };
+    }),
+
+  updateTabTitle: (tabId, newTitle) =>
+    set((state) => {
+      // ブックマークタブのタイトルは変更できない
+      if (tabId === 'bookmarks') return state;
+
+      const tab = state.tabs[tabId];
+      if (!tab) return state;
+
+      const newTabs = {
+        ...state.tabs,
+        [tabId]: {
+          ...tab,
+          title: newTitle,
+        },
+      };
+
+      // 永続化
+      saveTabs(newTabs, state.tabOrder);
+
+      return {
+        tabs: newTabs,
+      };
     }),
 
   hydrate: async () => {

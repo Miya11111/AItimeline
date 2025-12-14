@@ -15,6 +15,8 @@ import {
 import RoundImage from '../atoms/RoundImage';
 import { Icon } from '../atoms/icon';
 import AddTabModal from '../molecules/addTabModal';
+import DraggableTabItem from '../molecules/draggableTabItem';
+import EditTabTitleModal from '../molecules/editTabTitleModal';
 import SelectLangPulldown from '../molecules/selectLangPulldown';
 
 type MenuBarProps = {
@@ -30,6 +32,9 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
   const router = useRouter();
   const [addTabModalVisible, setAddTabModalVisible] = useState(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [editingTabId, setEditingTabId] = useState<string | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   // Zustandから状態を取得
   const setActiveTab = useTabStore((state) => state.setActiveTab);
@@ -37,6 +42,8 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
   const getTweetsForTab = useTabStore((state) => state.getTweetsForTab);
   const addTab = useTabStore((state) => state.addTab);
   const removeTab = useTabStore((state) => state.removeTab);
+  const reorderTabs = useTabStore((state) => state.reorderTabs);
+  const updateTabTitle = useTabStore((state) => state.updateTabTitle);
 
   // 全タブを取得（tabOrderとtabsを直接監視）
   const tabOrder = useTabStore((state) => state.tabOrder);
@@ -68,6 +75,46 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
     });
 
     console.log(`New tab added: ${tabName} (${newTabId})`);
+  };
+
+  const handleUpdateTabTitle = (tabId: string, newTitle: string) => {
+    updateTabTitle(tabId, newTitle);
+  };
+
+  const handleMoveTab = (fromIndex: number, toIndex: number) => {
+    const newOrder = [...tabOrder];
+    const [movedTab] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, movedTab);
+    reorderTabs(newOrder);
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggingIndex(index);
+  };
+
+  const handleDragMove = (index: number, dy: number) => {
+    const ITEM_HEIGHT = 68; // タブアイテムの高さ（paddingを含む）
+    const offset = Math.round(dy / ITEM_HEIGHT);
+
+    if (offset !== 0) {
+      // ブックマークタブ（インデックス0）は移動できないため、最小値を1に設定
+      const minIndex = 1;
+      const newIndex = Math.max(minIndex, Math.min(tabArray.length - 1, index + offset));
+      if (newIndex !== hoverIndex) {
+        setHoverIndex(newIndex);
+      }
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (draggingIndex !== null && hoverIndex !== null && draggingIndex !== hoverIndex) {
+      // ブックマークタブ（インデックス0）との入れ替えは禁止
+      if (draggingIndex !== 0 && hoverIndex !== 0) {
+        handleMoveTab(draggingIndex, hoverIndex);
+      }
+    }
+    setDraggingIndex(null);
+    setHoverIndex(null);
   };
 
   return (
@@ -128,7 +175,7 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                       <Icon
                         name="create-outline"
                         size={24}
-                        color={isEdit ? colors.yellow : colors.black}
+                        color={isEdit ? colors.blue : colors.black}
                       />
                     </TouchableOpacity>
                   </View>
@@ -163,31 +210,21 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
 
                 {/* タブリスト */}
                 <View style={{ flex: 1 }}>
-                  <ScrollView>
+                  <ScrollView scrollEnabled={!isEdit || draggingIndex === null}>
                     {tabArray.map((tab, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={{
-                          paddingVertical: 20,
-                          paddingHorizontal: 20,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                        onPress={() => handleTabPress(tab.id)}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                          <Icon name={tab.icon} size={28} color={colors.black} />
-                          <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>
-                            {tab.title}
-                          </Text>
-                        </View>
-                        {isEdit && tab.id !== 'bookmarks' && (
-                          <TouchableOpacity onPress={() => removeTab(tab.id)}>
-                            <Icon name="close-circle" size={24} color={colors.red} />
-                          </TouchableOpacity>
-                        )}
-                      </TouchableOpacity>
+                      <DraggableTabItem
+                        key={tab.id}
+                        tab={tab}
+                        index={index}
+                        isEdit={isEdit}
+                        isDragging={draggingIndex === index}
+                        onTabPress={handleTabPress}
+                        onTitlePress={setEditingTabId}
+                        onRemove={removeTab}
+                        onDragStart={handleDragStart}
+                        onDragMove={handleDragMove}
+                        onDragEnd={handleDragEnd}
+                      />
                     ))}
 
                     {/* 追加ボタン */}
@@ -223,6 +260,16 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
         onClose={() => setAddTabModalVisible(false)}
         onConfirm={handleAddTab}
       />
+
+      {/* タブタイトル編集モーダル */}
+      {editingTabId && (
+        <EditTabTitleModal
+          visible={editingTabId !== null}
+          currentTitle={tabs[editingTabId]?.title || ''}
+          onClose={() => setEditingTabId(null)}
+          onConfirm={(newTitle) => handleUpdateTabTitle(editingTabId, newTitle)}
+        />
+      )}
     </Modal>
   );
 }
