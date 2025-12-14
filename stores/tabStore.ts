@@ -35,6 +35,7 @@ type TabStore = {
   getTweetsForTab: (tabId: string) => Tweet[];
   getActiveTweets: () => Tweet[];
   getActiveTab: () => Tab | undefined;
+  getBookmarkedTweets: () => Tweet[];
   setActiveTab: (tabId: string) => void;
   addTab: (tab: Omit<Tab, 'tweetIds'>) => void;
   removeTab: (tabId: string) => void;
@@ -58,6 +59,12 @@ type TabStore = {
 
 export const useTabStore = create<TabStore>((set, get) => ({
   tabs: {
+    bookmarks: {
+      id: 'bookmarks',
+      title: 'ブックマーク',
+      icon: 'bookmark',
+      tweetIds: [], // ブックマークタブは動的に取得するため空
+    },
     tab1: {
       id: 'tab1',
       title: '日常の話題',
@@ -73,7 +80,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
   },
   tweets: {},
   activeTabId: 'tab1',
-  tabOrder: ['tab1', 'tab2'],
+  tabOrder: ['bookmarks', 'tab1', 'tab2'],
 
   addTweetToTab: (tabId, tweet) =>
     set((state) => {
@@ -148,6 +155,11 @@ export const useTabStore = create<TabStore>((set, get) => ({
     return state.tabs[state.activeTabId];
   },
 
+  getBookmarkedTweets: () => {
+    const state = get();
+    return Object.values(state.tweets).filter((tweet) => tweet.isBookmarked);
+  },
+
   setActiveTab: (tabId) => {
     const state = get();
     if (state.tabs[tabId]) {
@@ -192,6 +204,9 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
   removeTab: (tabId) =>
     set((state) => {
+      // ブックマークタブは削除できないようにする
+      if (tabId === 'bookmarks') return state;
+
       const newTabs = { ...state.tabs };
       delete newTabs[tabId];
 

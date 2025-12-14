@@ -25,9 +25,14 @@ export default function HomeScreen() {
   const getTweetsForTab = useTabStore((state) => state.getTweetsForTab);
   const addTweetToTab = useTabStore((state) => state.addTweetToTab);
   const getActiveTab = useTabStore((state) => state.getActiveTab);
+  const getBookmarkedTweets = useTabStore((state) => state.getBookmarkedTweets);
 
   // アクティブタブのツイートを取得（新しいものが上に来るように逆順）
-  const tweets = getTweetsForTab(activeTabId).reverse();
+  // 特別なタブID 'bookmarks' の場合はブックマークされたツイートを表示
+  const tweets =
+    activeTabId === 'bookmarks'
+      ? getBookmarkedTweets().reverse()
+      : getTweetsForTab(activeTabId).reverse();
 
   // 初回読み込み時にモックデータを読み込む
   useEffect(() => {

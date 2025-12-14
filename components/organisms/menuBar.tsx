@@ -125,7 +125,11 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                     </View>
                     {/* 編集アイコン */}
                     <TouchableOpacity onPress={() => setIsEdit(!isEdit)}>
-                      <Icon name="create-outline" size={24} color={colors.black} />
+                      <Icon
+                        name="create-outline"
+                        size={24}
+                        color={isEdit ? colors.yellow : colors.black}
+                      />
                     </TouchableOpacity>
                   </View>
                   <View style={{ flexDirection: 'row', paddingVertical: 12 }}>
@@ -157,25 +161,6 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                   <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>実績</Text>
                 </TouchableOpacity>
 
-                {/* ブックマーク */}
-                <TouchableOpacity
-                  style={{
-                    paddingVertical: 20,
-                    paddingHorizontal: 20,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}
-                  onPress={() => {
-                    console.log('Bookmark pressed');
-                    onClose();
-                  }}
-                >
-                  <Icon name={'bookmark'} size={24} color={colors.black} />
-                  <Text style={{ fontSize: 20, color: colors.black, marginLeft: 8 }}>
-                    ブックマーク
-                  </Text>
-                </TouchableOpacity>
-
                 {/* タブリスト */}
                 <View style={{ flex: 1 }}>
                   <ScrollView>
@@ -197,7 +182,7 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                             {tab.title}
                           </Text>
                         </View>
-                        {isEdit && (
+                        {isEdit && tab.id !== 'bookmarks' && (
                           <TouchableOpacity onPress={() => removeTab(tab.id)}>
                             <Icon name="close-circle" size={24} color={colors.red} />
                           </TouchableOpacity>
