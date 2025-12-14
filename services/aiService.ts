@@ -1,5 +1,6 @@
 import { Tweet } from '@/stores/tabStore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getRandomAnimalIcon } from '@/constants/animalIcons';
 
 const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -126,6 +127,7 @@ JSONのみを返してください。他の説明は不要です。`;
           favoriteNum: baseFavoriteNum,
           impressionNum: Math.floor(baseFavoriteNum * (1.5 + Math.random() * 0.5)), // いいねの1.5-2倍
           animalNum: 0,
+          animalIconType: getRandomAnimalIcon(),
           isLiked: false,
           isRetweeted: false,
           isBookmarked: false,
@@ -163,6 +165,7 @@ JSONのみを返してください。他の説明は不要です。`;
       favoriteNum: 0,
       impressionNum: 0,
       animalNum: 0,
+      animalIconType: getRandomAnimalIcon(),
       isLiked: false,
       isRetweeted: false,
       isBookmarked: false,

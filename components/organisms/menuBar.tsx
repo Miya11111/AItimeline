@@ -1,5 +1,7 @@
 import { useColors } from '@/hooks/use-colors';
 import { useTabStore } from '@/stores/tabStore';
+import { useAchievementStore } from '@/stores/achievementStore';
+import { ANIMAL_ICONS } from '@/constants/animalIcons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -50,6 +52,9 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
   // 全タブを取得（tabOrderとtabsを直接監視）
   const tabOrder = useTabStore((state) => state.tabOrder);
   const tabs = useTabStore((state) => state.tabs);
+
+  // 実績を取得
+  const achievements = useAchievementStore((state) => state.achievements);
 
   // tabOrderとtabsから配列を生成
   const tabArray = tabOrder.map((id) => tabs[id]).filter((tab) => tab !== undefined);
@@ -244,43 +249,19 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                       opacity: achievementHeight,
                     }}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Icon name={'paw'} family="FontAwesome6" size={16} color={colors.black} />
-                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Icon name={'cat'} family="FontAwesome6" size={16} color={colors.black} />
-                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Icon name={'dog'} family="FontAwesome6" size={16} color={colors.black} />
-                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Icon name={'frog'} family="FontAwesome6" size={16} color={colors.black} />
-                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Icon name={'dragon'} family="FontAwesome6" size={16} color={colors.black} />
-                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Icon
-                        name={'kiwi-bird'}
-                        family="FontAwesome6"
-                        size={16}
-                        color={colors.black}
-                      />
-                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Icon name={'horse'} family="FontAwesome6" size={16} color={colors.black} />
-                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Icon name={'fish'} family="FontAwesome6" size={16} color={colors.black} />
-                      <Text style={{ color: colors.black, paddingLeft: 8 }}>0</Text>
-                    </View>
+                    {ANIMAL_ICONS.map((icon) => (
+                      <View key={icon.type} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Icon
+                          name={icon.type}
+                          family="FontAwesome6"
+                          size={16}
+                          color={colors.black}
+                        />
+                        <Text style={{ color: colors.black, paddingLeft: 8 }}>
+                          {achievements[icon.type]}
+                        </Text>
+                      </View>
+                    ))}
                   </Animated.View>
                 )}
 

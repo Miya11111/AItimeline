@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { AnimalIconType } from '@/constants/animalIcons';
 
 export type Tweet = {
   id: number;
@@ -11,6 +12,7 @@ export type Tweet = {
   favoriteNum: number;
   impressionNum: number;
   animalNum: number;
+  animalIconType: AnimalIconType; // 表示される動物アイコンの種類
   // ユーザーのインタラクション情報
   isLiked: boolean; // いいねしているか
   isRetweeted: boolean; // リツイートしているか

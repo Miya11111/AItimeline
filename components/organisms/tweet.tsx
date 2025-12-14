@@ -9,6 +9,8 @@ import FavIconButton from '../molecules/favIconButton';
 import RetweetIconButton from '../molecules/retweetButton';
 import TweetDetail from './tweetDetail';
 import { useTabStore } from '@/stores/tabStore';
+import { useAchievementStore } from '@/stores/achievementStore';
+import { AnimalIconType } from '@/constants/animalIcons';
 
 export type TweetType = {
   id: number;
@@ -20,6 +22,7 @@ export type TweetType = {
   favoriteNum: number;
   impressionNum: number;
   animalNum: number;
+  animalIconType: AnimalIconType;
   isLiked: boolean;
   isRetweeted: boolean;
   isBookmarked: boolean;
@@ -36,6 +39,7 @@ export default function Tweet({
   favoriteNum,
   impressionNum,
   animalNum,
+  animalIconType,
   isLiked,
   isRetweeted,
   isBookmarked,
@@ -43,6 +47,8 @@ export default function Tweet({
 }: TweetType) {
   const colors = useColors();
   const updateTweetInteraction = useTabStore((state) => state.updateTweetInteraction);
+  const incrementAnimal = useAchievementStore((state) => state.incrementAnimal);
+  const decrementAnimal = useAchievementStore((state) => state.decrementAnimal);
 
   // Zustandから最新の状態を個別に取得（パフォーマンスとリアクティビティのため）
   const currentRetweetNum = useTabStore((state) => state.tweets[id]?.retweetNum ?? retweetNum);
@@ -51,6 +57,9 @@ export default function Tweet({
     (state) => state.tweets[id]?.impressionNum ?? impressionNum
   );
   const currentAnimalNum = useTabStore((state) => state.tweets[id]?.animalNum ?? animalNum);
+  const currentAnimalIconType = useTabStore(
+    (state) => state.tweets[id]?.animalIconType ?? animalIconType
+  );
   const currentIsLiked = useTabStore((state) => state.tweets[id]?.isLiked ?? isLiked);
   const currentIsRetweeted = useTabStore((state) => state.tweets[id]?.isRetweeted ?? isRetweeted);
   const currentIsBookmarked = useTabStore(
@@ -139,6 +148,9 @@ export default function Tweet({
                   }}
                   initialAnimalNum={initialAnimalNum}
                   isAnimaled={currentIsAnimaled}
+                  animalIconType={currentAnimalIconType}
+                  onAnimalPress={() => incrementAnimal(currentAnimalIconType)}
+                  onAnimalUnpress={() => decrementAnimal(currentAnimalIconType)}
                 />
               </View>
               <View style={{ flex: 1 }}>
