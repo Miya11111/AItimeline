@@ -68,7 +68,7 @@ export async function generateTweets(
       });
 
       const topicInstruction = tabTitle
-        ? `「${tabTitle}」に関する最新情報（${currentDate}時点）を${USE_GOOGLE_SEARCH ? 'Google検索で調べて、' : ''}それに基づいた`
+        ? `「${tabTitle}」に関する情報を${USE_GOOGLE_SEARCH ? 'Google検索で調べて（${currentDate}時点）、' : ''}それに基づいた`
         : `${USE_GOOGLE_SEARCH ? '最新のトレンドをGoogle検索で調べて、' : ''}`;
       const prompt = `今日は${currentDate}です。${count}個の、${topicInstruction}ランダムなTwitterユーザーとそのツイートを生成してください。
 各ユーザーは以下の形式のJSONオブジェクトで返してください：
