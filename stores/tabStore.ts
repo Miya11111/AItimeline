@@ -24,7 +24,9 @@ export type Tab = {
   id: string;
   title: string;
   icon: string;
-  tweetIds: number[]; // ツイートIDの配列のみ保持
+  tweetIds: number[]; // 表示中のツイートIDの配列
+  stockIds: number[]; // ストックされているツイートIDの配列
+  isGenerating: boolean; // ツイート生成中かどうか
 };
 
 type TabStore = {
@@ -34,6 +36,7 @@ type TabStore = {
   tabOrder: string[]; // タブの順序を保持
   isHydrated: boolean; // ストレージからの読み込みが完了したか
 
+  // 既存の関数
   addTweetToTab: (tabId: string, tweet: Tweet) => void;
   removeTweetFromTab: (tabId: string, tweetId: number) => void;
   getTweetsForTab: (tabId: string) => Tweet[];
@@ -41,7 +44,7 @@ type TabStore = {
   getActiveTab: () => Tab | undefined;
   getBookmarkedTweets: () => Tweet[];
   setActiveTab: (tabId: string) => void;
-  addTab: (tab: Omit<Tab, 'tweetIds'>) => void;
+  addTab: (tab: Omit<Tab, 'tweetIds' | 'stockIds' | 'isGenerating'>) => void;
   removeTab: (tabId: string) => void;
   getAllTabs: () => Tab[];
   updateTweetInteraction: (
@@ -62,6 +65,12 @@ type TabStore = {
   reorderTabs: (newOrder: string[]) => void;
   updateTabTitle: (tabId: string, newTitle: string) => void;
   hydrate: () => Promise<void>;
+
+  // 新しいストック管理機能
+  addTweetsToStock: (tabId: string, tweets: Tweet[]) => void; // ストックに追加
+  loadTweetsFromStock: (tabId: string, count: number) => Tweet[]; // ストックから表示用に移動
+  getStockCount: (tabId: string) => number; // ストック数を取得
+  setGenerating: (tabId: string, isGenerating: boolean) => void; // 生成中フラグを設定
 };
 
 // ストレージキー
@@ -78,18 +87,24 @@ const DEFAULT_TABS = {
     title: 'ブックマーク',
     icon: 'bookmark',
     tweetIds: [],
+    stockIds: [],
+    isGenerating: false,
   },
   tab1: {
     id: 'tab1',
     title: '日常の話題',
     icon: 'information-circle-outline',
     tweetIds: [],
+    stockIds: [],
+    isGenerating: false,
   },
   tab2: {
     id: 'tab2',
     title: '生物雑学',
     icon: 'information-circle-outline',
     tweetIds: [],
+    stockIds: [],
+    isGenerating: false,
   },
 };
 
@@ -224,6 +239,8 @@ export const useTabStore = create<TabStore>((set, get) => ({
         [tab.id]: {
           ...tab,
           tweetIds: [],
+          stockIds: [],
+          isGenerating: false,
         },
       };
       const newTabOrder = [...state.tabOrder, tab.id];
@@ -307,6 +324,110 @@ export const useTabStore = create<TabStore>((set, get) => ({
       };
     }),
 
+  // ストックに複数のツイートを追加
+  addTweetsToStock: (tabId, tweets) =>
+    set((state) => {
+      const tab = state.tabs[tabId];
+      if (!tab) {
+        console.warn(`[addTweetsToStock] Tab ${tabId} not found`);
+        return state;
+      }
+
+      // 後方互換性のためstockIdsがない場合は空配列を使用
+      const currentStockIds = tab.stockIds || [];
+      const currentTweetIds = tab.tweetIds || [];
+
+      // 新しいツイートをtweetsストアに追加
+      const newTweetsMap = { ...state.tweets };
+      const newStockIds = [...currentStockIds];
+
+      tweets.forEach((tweet) => {
+        // 既に存在するIDは追加しない
+        if (!currentStockIds.includes(tweet.id) && !currentTweetIds.includes(tweet.id)) {
+          newTweetsMap[tweet.id] = tweet;
+          newStockIds.push(tweet.id);
+        }
+      });
+
+      console.log(
+        `[addTweetsToStock] Added ${newStockIds.length - currentStockIds.length} tweets to stock for ${tabId}`
+      );
+
+      return {
+        tabs: {
+          ...state.tabs,
+          [tabId]: {
+            ...tab,
+            stockIds: newStockIds,
+            isGenerating: tab.isGenerating || false, // デフォルト値を設定
+          },
+        },
+        tweets: newTweetsMap,
+      };
+    }),
+
+  // ストックから指定数のツイートを表示用に移動
+  loadTweetsFromStock: (tabId, count) => {
+    const state = get();
+    const tab = state.tabs[tabId];
+    if (!tab) {
+      console.warn(`[loadTweetsFromStock] Tab ${tabId} not found`);
+      return [];
+    }
+
+    // 後方互換性のためstockIdsがない場合は空配列を使用
+    const currentStockIds = tab.stockIds || [];
+    const currentTweetIds = tab.tweetIds || [];
+
+    // ストックから取得する数を決定
+    const actualCount = Math.min(count, currentStockIds.length);
+    const loadIds = currentStockIds.slice(0, actualCount);
+    const remainingStockIds = currentStockIds.slice(actualCount);
+
+    console.log(`[loadTweetsFromStock] Loading ${actualCount} tweets from stock for ${tabId}`);
+
+    // 表示用に移動
+    set((state) => ({
+      tabs: {
+        ...state.tabs,
+        [tabId]: {
+          ...tab,
+          tweetIds: [...currentTweetIds, ...loadIds],
+          stockIds: remainingStockIds,
+          isGenerating: tab.isGenerating || false,
+        },
+      },
+    }));
+
+    // 移動したツイートを返す
+    return loadIds.map((id) => state.tweets[id]).filter((tweet) => tweet !== undefined);
+  },
+
+  // ストック数を取得
+  getStockCount: (tabId) => {
+    const state = get();
+    const tab = state.tabs[tabId];
+    if (!tab) return 0;
+    return (tab.stockIds || []).length;
+  },
+
+  // 生成中フラグを設定
+  setGenerating: (tabId, isGenerating) =>
+    set((state) => {
+      const tab = state.tabs[tabId];
+      if (!tab) return state;
+
+      return {
+        tabs: {
+          ...state.tabs,
+          [tabId]: {
+            ...tab,
+            isGenerating,
+          },
+        },
+      };
+    }),
+
   hydrate: async () => {
     try {
       // タブとタブ順序を読み込み
@@ -326,6 +447,16 @@ export const useTabStore = create<TabStore>((set, get) => ({
         tabs.bookmarks = DEFAULT_TABS.bookmarks;
       }
 
+      // 既存のタブにstockIdsとisGeneratingを追加（マイグレーション）
+      Object.keys(tabs).forEach((tabId) => {
+        if (!tabs[tabId].stockIds) {
+          tabs[tabId].stockIds = [];
+        }
+        if (tabs[tabId].isGenerating === undefined) {
+          tabs[tabId].isGenerating = false;
+        }
+      });
+
       const tabOrder = loadedTabOrder || DEFAULT_TAB_ORDER;
       if (!tabOrder.includes('bookmarks')) {
         tabOrder.unshift('bookmarks');
@@ -337,6 +468,8 @@ export const useTabStore = create<TabStore>((set, get) => ({
       loadedBookmarkedTweets.forEach((tweet: Tweet) => {
         tweets[tweet.id] = tweet;
       });
+
+      console.log('[hydrate] Successfully loaded tabs:', Object.keys(tabs));
 
       set({
         tabs,

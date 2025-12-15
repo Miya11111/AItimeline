@@ -6,7 +6,10 @@ const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
 // モデルとGoogle Search groundingの設定
-// フォールバック戦略: 検索機能付き上位モデル → 検索なし上位モデル → 検索なし軽量モデル
+// フォールバック戦略: 検索機能付き上位モデル → 検索なし上位モデル → 軽量モデル → 旧モデル
+// 2025年12月時点のレート制限（無料プラン）:
+// - Google Search使用時: 全モデル共通で20/日
+// - 検索なし: gemini-2.5-flash-lite (1000/日), gemini-2.0-flash (1500/日)
 type ModelConfig = {
   model: string;
   useSearch: boolean;
@@ -14,9 +17,10 @@ type ModelConfig = {
 };
 
 const MODEL_FALLBACK_CHAIN: ModelConfig[] = [
-  { model: 'gemini-2.5-flash', useSearch: true, quota: '20/日' },
+  { model: 'gemini-2.5-flash', useSearch: true, quota: '20/日(検索)' },
   { model: 'gemini-2.5-flash', useSearch: false, quota: '250/日' },
   { model: 'gemini-2.5-flash-lite', useSearch: false, quota: '1000/日' },
+  { model: 'gemini-2.0-flash', useSearch: false, quota: '1500/日' },
 ];
 
 // assetsの画像をランダムに選択
@@ -58,11 +62,9 @@ export async function generateTweets(
         day: 'numeric',
       });
 
-      const topicInstruction = tabTitle
-        ? `「${tabTitle}」に関する`
-        : "";
+      const topicInstruction = tabTitle ? `「${tabTitle}」に関する` : '';
       const prompt = `今日は${currentDate}です。${count}個の、${topicInstruction}ランダムなTwitterユーザーとそのツイートを生成してください。
-      タイトルに「最新」「速報」「ニュース」などの即時性に関するワードが入っている場合、${useSearch ? "最新の情報（${currentDate}時点）をGoogle検索で調べてください。" : "2024-2025年のトレンドを反映してください。"} 
+      タイトルに「最新」「速報」「ニュース」などの即時性に関するワードが入っている場合、${useSearch ? '最新の情報（${currentDate}時点）をGoogle検索で調べてください。' : '2024-2025年のトレンドを反映してください。'} 
 各ユーザーは以下の形式のJSONオブジェクトで返してください：
 {
   "tweets": [
@@ -103,6 +105,12 @@ JSONのみを返してください。他の説明は不要です。`;
       const text = response.text || '';
 
       console.log('[generateTweets] Raw AI response:', text);
+
+      // レスポンスが空の場合は次のモデルを試す
+      if (!text || text.trim().length === 0) {
+        console.error(`[generateTweets] Empty response from ${modelName}`);
+        throw new Error(`Empty response from ${modelName}`);
+      }
 
       // Google Search grounding のメタデータをログ出力（新SDK）
       // 型定義が不完全なため any でアクセス
@@ -195,16 +203,26 @@ JSONのみを返してください。他の説明は不要です。`;
 
       return tweets;
     } catch (error) {
-      // 429エラーの場合は次のモデルへフォールバック
+      // エラーメッセージを取得
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`[generateTweets] Model ${modelName} failed:`, errorMessage);
-      console.error('[generateTweets] Full error:', error);
+      const errorObj = error as any;
+      const is429Error =
+        errorMessage.includes('429') ||
+        errorMessage.includes('RESOURCE_EXHAUSTED') ||
+        errorObj?.error?.code === 429;
 
-      if (errorMessage.includes('429') && configIndex < MODEL_FALLBACK_CHAIN.length - 1) {
-        // 次のモデルを試す前に少し待機
-        console.log(`[generateTweets] Retrying with next model...`);
-        await sleep(2000);
+      if (is429Error && configIndex < MODEL_FALLBACK_CHAIN.length - 1) {
+        // 429エラーの場合は静かに次のモデルへフォールバック（エラーログを出さない）
+        console.log(
+          `[generateTweets] ${modelName} quota exceeded, trying next model (${MODEL_FALLBACK_CHAIN[configIndex + 1].model})...`
+        );
+        await sleep(1000);
         continue;
+      }
+
+      // その他のエラーの場合のみログを出力
+      if (!is429Error) {
+        console.error(`[generateTweets] Model ${modelName} failed:`, errorMessage);
       }
 
       // その他のエラーまたは最後のモデルでも失敗時
