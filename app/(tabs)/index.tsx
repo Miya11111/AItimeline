@@ -93,9 +93,10 @@ export default function HomeScreen() {
 
       const stockCount = getStockCount(activeTabId);
 
-      // ストックが11件以上ある場合はストックから読み込む
-      if (stockCount >= 11) {
+      // ストックが10件より多くある場合はストックから読み込む
+      if (stockCount > 10) {
         console.log(`[HomeScreen] Loading from stock (${stockCount} available)`);
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1秒待機
         const displayCount = Math.floor(Math.random() * 4) + 7; // 7〜10
         loadTweetsFromStock(activeTabId, displayCount);
       } else {

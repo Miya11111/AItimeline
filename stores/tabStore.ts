@@ -1,6 +1,6 @@
+import { AnimalIconType } from '@/constants/animalIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-import { AnimalIconType } from '@/constants/animalIcons';
 
 export type Tweet = {
   id: number;
@@ -113,7 +113,7 @@ const DEFAULT_TAB_ORDER = ['bookmarks', 'tab1', 'tab2'];
 export const useTabStore = create<TabStore>((set, get) => ({
   tabs: DEFAULT_TABS,
   tweets: {},
-  activeTabId: 'tab1',
+  activeTabId: DEFAULT_TAB_ORDER.find((id) => id !== 'bookmarks') || DEFAULT_TAB_ORDER[1],
   tabOrder: DEFAULT_TAB_ORDER,
   isHydrated: false,
 
@@ -469,12 +469,16 @@ export const useTabStore = create<TabStore>((set, get) => ({
         tweets[tweet.id] = tweet;
       });
 
+      // ブックマーク以外の最初のタブをアクティブタブに設定
+      const firstNonBookmarkTab = tabOrder.find((id: string) => id !== 'bookmarks') || tabOrder[1];
+
       console.log('[hydrate] Successfully loaded tabs:', Object.keys(tabs));
 
       set({
         tabs,
         tabOrder,
         tweets,
+        activeTabId: firstNonBookmarkTab,
         isHydrated: true,
       });
     } catch (error) {
