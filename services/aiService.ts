@@ -1,15 +1,23 @@
 import { getRandomAnimalIcon } from '@/constants/animalIcons';
 import { Tweet } from '@/stores/tabStore';
-import { DynamicRetrievalMode, GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(apiKey);
+const ai = new GoogleGenAI({ apiKey });
 
-// Google Search grounding を有効化
-// 注意: Google Search を使うとレート制限が厳しくなります
-// - gemini-2.5-flash: 1日20リクエスト（検索あり）vs 1500リクエスト（検索なし）
-// - gemini-1.5-flash: より緩い制限で利用可能
-const USE_GOOGLE_SEARCH = false; // 必要に応じて true に変更
+// モデルとGoogle Search groundingの設定
+// フォールバック戦略: 検索機能付き上位モデル → 検索なし上位モデル → 検索なし軽量モデル
+type ModelConfig = {
+  model: string;
+  useSearch: boolean;
+  quota: string;
+};
+
+const MODEL_FALLBACK_CHAIN: ModelConfig[] = [
+  { model: 'gemini-2.5-flash', useSearch: true, quota: '20/日' },
+  { model: 'gemini-2.5-flash', useSearch: false, quota: '250/日' },
+  { model: 'gemini-2.5-flash-lite', useSearch: false, quota: '1000/日' },
+];
 
 // assetsの画像をランダムに選択
 const avatarImages = [
@@ -33,34 +41,17 @@ export async function generateTweets(
   startId: number = 1,
   tabTitle?: string
 ): Promise<Tweet[]> {
-  // 429エラー時のフォールバックモデル
-  // Google Search使用時: gemini-2.5-flash (20/日) が制限厳しい
-  // 検索なし: gemini-2.5-flash-lite (1000/日) が最も余裕がある
-  const models = USE_GOOGLE_SEARCH
-    ? ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-flash-lite']
-    : ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-1.5-flash'];
-
-  for (let modelIndex = 0; modelIndex < models.length; modelIndex++) {
-    const modelName = models[modelIndex];
+  // モデルをフォールバックチェーンに沿って試行
+  for (let configIndex = 0; configIndex < MODEL_FALLBACK_CHAIN.length; configIndex++) {
+    const config = MODEL_FALLBACK_CHAIN[configIndex];
+    const { model: modelName, useSearch, quota } = config;
 
     try {
-      // Google Search grounding 設定
-      const groundingTool = {
-        googleSearchRetrieval: {
-          dynamicRetrievalConfig: {
-            mode: DynamicRetrievalMode.MODE_DYNAMIC,
-            dynamicThreshold: 0.5, // 検索を使う（低いほど検索しやすい）
-          },
-        },
-      };
+      console.log(
+        `[generateTweets] Trying ${modelName} (検索: ${useSearch ? 'あり' : 'なし'}, 上限: ${quota})`
+      );
 
-      const model = USE_GOOGLE_SEARCH
-        ? genAI.getGenerativeModel({
-            model: modelName,
-            tools: [groundingTool],
-          })
-        : genAI.getGenerativeModel({ model: modelName });
-
+      // プロンプトの準備
       const currentDate = new Date().toLocaleDateString('ja-JP', {
         year: 'numeric',
         month: 'long',
@@ -68,9 +59,10 @@ export async function generateTweets(
       });
 
       const topicInstruction = tabTitle
-        ? `「${tabTitle}」に関する情報を${USE_GOOGLE_SEARCH ? 'Google検索で調べて（${currentDate}時点）、' : ''}それに基づいた`
-        : `${USE_GOOGLE_SEARCH ? '最新のトレンドをGoogle検索で調べて、' : ''}`;
+        ? `「${tabTitle}」に関する`
+        : "";
       const prompt = `今日は${currentDate}です。${count}個の、${topicInstruction}ランダムなTwitterユーザーとそのツイートを生成してください。
+      タイトルに「最新」「速報」「ニュース」などの即時性に関するワードが入っている場合、${useSearch ? "最新の情報（${currentDate}時点）をGoogle検索で調べてください。" : "2024-2025年のトレンドを反映してください。"} 
 各ユーザーは以下の形式のJSONオブジェクトで返してください：
 {
   "tweets": [
@@ -90,23 +82,44 @@ export async function generateTweets(
 
 JSONのみを返してください。他の説明は不要です。`;
 
-      const result = await model.generateContent(prompt);
-      const response = result.response;
-      const text = response.text();
+      // Google Search grounding 設定（新SDK）
+      const groundingTool = {
+        googleSearch: {},
+      };
+
+      const config = useSearch
+        ? {
+            tools: [groundingTool],
+          }
+        : {};
+
+      // 新SDKでのAPI呼び出し
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: prompt,
+        config,
+      });
+
+      const text = response.text || '';
 
       console.log('[generateTweets] Raw AI response:', text);
 
-      // Google Search grounding のメタデータをログ出力
-      if (USE_GOOGLE_SEARCH && response.candidates?.[0]?.groundingMetadata) {
-        const metadata = response.candidates[0].groundingMetadata;
-        console.log('[generateTweets] Grounding metadata:');
-        console.log('  - Search queries:', metadata.webSearchQueries);
-        console.log('  - Grounding chunks:', metadata.groundingChunks?.length || 0);
-        if (metadata.retrievalMetadata?.googleSearchDynamicRetrievalScore) {
-          console.log(
-            '  - Dynamic retrieval score:',
-            metadata.retrievalMetadata.googleSearchDynamicRetrievalScore
-          );
+      // Google Search grounding のメタデータをログ出力（新SDK）
+      // 型定義が不完全なため any でアクセス
+      if (useSearch) {
+        const responseAny = response as any;
+        if (responseAny.groundingMetadata || responseAny.candidates?.[0]?.groundingMetadata) {
+          const metadata =
+            responseAny.groundingMetadata || responseAny.candidates?.[0]?.groundingMetadata;
+          console.log('[generateTweets] Grounding metadata:');
+          console.log('  - Search queries:', metadata.webSearchQueries);
+          console.log('  - Grounding chunks:', metadata.groundingChunks?.length || 0);
+          if (metadata.retrievalMetadata?.googleSearchDynamicRetrievalScore) {
+            console.log(
+              '  - Dynamic retrieval score:',
+              metadata.retrievalMetadata.googleSearchDynamicRetrievalScore
+            );
+          }
         }
       }
 
@@ -187,8 +200,9 @@ JSONのみを返してください。他の説明は不要です。`;
       console.error(`[generateTweets] Model ${modelName} failed:`, errorMessage);
       console.error('[generateTweets] Full error:', error);
 
-      if (errorMessage.includes('429') && modelIndex < models.length - 1) {
+      if (errorMessage.includes('429') && configIndex < MODEL_FALLBACK_CHAIN.length - 1) {
         // 次のモデルを試す前に少し待機
+        console.log(`[generateTweets] Retrying with next model...`);
         await sleep(2000);
         continue;
       }
@@ -199,9 +213,8 @@ JSONのみを返してください。他の説明は不要です。`;
   }
 
   // すべてのリトライが失敗した場合
-  const errorMsg = USE_GOOGLE_SEARCH
-    ? 'Google検索機能を使用すると1日20リクエストまでです。aiService.tsでUSE_GOOGLE_SEARCH=falseに設定すると1日1000リクエスト使えます。'
-    : 'API制限に達しました。明日の午前9時(太平洋時間の深夜0時)にリセットされます。';
+  const errorMsg =
+    'すべてのモデルで制限に達しました。フォールバック: gemini-2.5-flash(検索あり,20/日) → gemini-2.5-flash(検索なし,250/日) → gemini-2.5-flash-lite(検索なし,1000/日)。明日の午前9時(太平洋時間0時)にリセットされます。';
 
   return [
     {
