@@ -1,17 +1,32 @@
+import { AnimalIconType } from '@/constants/animalIcons';
 import { useColors } from '@/hooks/use-colors';
-import { Animated, ImageSourcePropType, Modal, Text, TouchableOpacity, View } from 'react-native';
+import { generateReplyTweets } from '@/services/aiService';
+import { Tweet as TweetType } from '@/stores/tabStore';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  ImageSourcePropType,
+  Modal,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import IconButton from '../atoms/IconButton';
 import RoundImage from '../atoms/RoundImage';
 import AnimalIconButton from '../molecules/animalIconButton';
 import FavIconButton from '../molecules/favIconButton';
 import RetweetIconButton from '../molecules/retweetButton';
+import Tweet from './tweet';
 
 type TweetState = {
+  animalIconType: AnimalIconType;
   animalNum: number;
   retweetNum: number;
   favoriteNum: number;
   impressionNum: number;
-  bookmark: boolean;
+  bookmark?: boolean;
   isLiked: boolean;
   isRetweeted: boolean;
   isAnimaled: boolean;
@@ -47,9 +62,25 @@ export default function TweetDetail({
   initialFavoriteNum,
 }: TweetDetailProps) {
   const colors = useColors();
+  const [isGeneratingReply, setIsGeneratingReply] = useState<boolean>(false);
+  const [finishGenerateReply, setFinishGenerateReply] = useState<boolean>(false);
+  const [generatedReplies, setGeneratedReplies] = useState<TweetType[]>([]);
 
   const handleBookmarkPress = () => {
     setTweetState((prev) => ({ ...prev, bookmark: !prev.bookmark }));
+  };
+
+  const handleGenerateReply = async () => {
+    setIsGeneratingReply(true);
+    try {
+      const replies = await generateReplyTweets(message, 10000);
+      setGeneratedReplies(replies);
+      setFinishGenerateReply(true);
+    } catch (error) {
+      console.error('Failed to generate reply:', error);
+    } finally {
+      setIsGeneratingReply(false);
+    }
   };
 
   return (
@@ -75,7 +106,7 @@ export default function TweetDetail({
             elevation: 5,
           }}
         >
-          <View style={{ flex: 1 }}>
+          <ScrollView style={{ flex: 1 }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -158,21 +189,24 @@ export default function TweetDetail({
               </TouchableOpacity>
             </View>
             {/* ブックマーク */}
-            <View
-              style={{
-                flexDirection: 'row',
-                padding: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.darkGray,
-              }}
-            >
-              <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
-                {tweetState.retweetNum}
-              </Text>
-              <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
-                ブックマーク
-              </Text>
-            </View>
+            {tweetState.bookmark !== undefined && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  padding: 12,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.darkGray,
+                }}
+              >
+                <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
+                  {tweetState.retweetNum}
+                </Text>
+
+                <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
+                  ブックマーク
+                </Text>
+              </View>
+            )}
             {/* 各アイコン */}
             <View
               style={{
@@ -183,6 +217,7 @@ export default function TweetDetail({
               }}
             >
               <AnimalIconButton
+                animalIconType={tweetState.animalIconType}
                 animalNum={tweetState.animalNum}
                 setAnimalNum={(num) => setTweetState((prev) => ({ ...prev, animalNum: num }))}
                 initialAnimalNum={initialAnimalNum}
@@ -209,15 +244,17 @@ export default function TweetDetail({
                 isJustifyContent
                 size={20}
               />
-              <IconButton
-                icon={{
-                  name: 'bookmark',
-                  size: 20,
-                  color: tweetState.bookmark ? colors.blue : colors.lightGray,
-                }}
-                onPress={handleBookmarkPress}
-                isJustifyContent
-              />
+              {tweetState.bookmark !== undefined && (
+                <IconButton
+                  icon={{
+                    name: 'bookmark',
+                    size: 20,
+                    color: tweetState.bookmark ? colors.blue : colors.lightGray,
+                  }}
+                  onPress={handleBookmarkPress}
+                  isJustifyContent
+                />
+              )}
               <IconButton
                 icon={{
                   name: 'share-nodes',
@@ -228,12 +265,52 @@ export default function TweetDetail({
                 isJustifyContent
               />
             </View>
-            {/* <View style={{ padding: 20 }}>
-              <Text style={{ color: colors.black }}>Name: {name}</Text>
-              <Text style={{ color: colors.lightGray, marginTop: 10 }}>@{nameId}</Text>
-              <Text style={{ color: colors.black, marginTop: 10 }}>{message}</Text>
-            </View> */}
-          </View>
+            {/* AI返信生成ボタン */}
+            {!finishGenerateReply && (
+              <View style={{ padding: 10 }}>
+                {isGeneratingReply ? (
+                  <View style={{ padding: 10 }}>
+                    <ActivityIndicator color={colors.blue} />
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={handleGenerateReply}
+                    style={{
+                      padding: 10,
+                      borderRadius: 20,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ color: colors.blue, fontSize: 16 }}>返信を表示</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {/* 生成された返信 */}
+            {generatedReplies.length > 0 && (
+              <View>
+                {generatedReplies.map((reply) => (
+                  <Tweet
+                    key={reply.id}
+                    id={reply.id}
+                    image={reply.image}
+                    name={reply.name}
+                    nameId={reply.nameId}
+                    message={reply.message}
+                    retweetNum={reply.retweetNum}
+                    favoriteNum={reply.favoriteNum}
+                    impressionNum={reply.impressionNum}
+                    animalNum={reply.animalNum}
+                    animalIconType={reply.animalIconType}
+                    isLiked={reply.isLiked}
+                    isRetweeted={reply.isRetweeted}
+                    isAnimaled={reply.isAnimaled}
+                  />
+                ))}
+              </View>
+            )}
+          </ScrollView>
         </Animated.View>
       </View>
     </Modal>

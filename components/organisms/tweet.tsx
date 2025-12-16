@@ -1,4 +1,7 @@
+import { AnimalIconType } from '@/constants/animalIcons';
 import { useColors } from '@/hooks/use-colors';
+import { useAchievementStore } from '@/stores/achievementStore';
+import { useTabStore } from '@/stores/tabStore';
 import { useState } from 'react';
 import { Animated, ImageSourcePropType, Text, TouchableOpacity, View } from 'react-native';
 import { Icon } from '../atoms/icon';
@@ -8,9 +11,6 @@ import AnimalIconButton from '../molecules/animalIconButton';
 import FavIconButton from '../molecules/favIconButton';
 import RetweetIconButton from '../molecules/retweetButton';
 import TweetDetail from './tweetDetail';
-import { useTabStore } from '@/stores/tabStore';
-import { useAchievementStore } from '@/stores/achievementStore';
-import { AnimalIconType } from '@/constants/animalIcons';
 
 export type TweetType = {
   id: number;
@@ -25,7 +25,7 @@ export type TweetType = {
   animalIconType: AnimalIconType;
   isLiked: boolean;
   isRetweeted: boolean;
-  isBookmarked: boolean;
+  isBookmarked?: boolean;
   isAnimaled: boolean;
 };
 
@@ -62,9 +62,7 @@ export default function Tweet({
   );
   const currentIsLiked = useTabStore((state) => state.tweets[id]?.isLiked ?? isLiked);
   const currentIsRetweeted = useTabStore((state) => state.tweets[id]?.isRetweeted ?? isRetweeted);
-  const currentIsBookmarked = useTabStore(
-    (state) => state.tweets[id]?.isBookmarked ?? isBookmarked
-  );
+  const currentIsBookmarked = useTabStore((state) => state.tweets[id]?.isBookmarked ?? undefined);
   const currentIsAnimaled = useTabStore((state) => state.tweets[id]?.isAnimaled ?? isAnimaled);
 
   const initialAnimalNum = animalNum;
@@ -193,16 +191,18 @@ export default function Tweet({
                 />
               </View>
               <View style={{ flexDirection: 'row', gap: 4 }}>
-                <TouchableOpacity
-                  onPress={handleBookmarkPress}
-                  style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8 }}
-                >
-                  <Icon
-                    name="bookmark"
-                    size={16}
-                    color={currentIsBookmarked ? colors.blue : colors.lightGray}
-                  />
-                </TouchableOpacity>
+                {isBookmarked !== undefined && (
+                  <TouchableOpacity
+                    onPress={handleBookmarkPress}
+                    style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8 }}
+                  >
+                    <Icon
+                      name="bookmark"
+                      size={16}
+                      color={currentIsBookmarked ? colors.blue : colors.lightGray}
+                    />
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Icon
                     name="share-nodes"
@@ -226,6 +226,7 @@ export default function Tweet({
         nameId={nameId}
         message={message}
         tweetState={{
+          animalIconType: currentAnimalIconType,
           animalNum: currentAnimalNum,
           retweetNum: currentRetweetNum,
           favoriteNum: currentFavoriteNum,
@@ -239,6 +240,7 @@ export default function Tweet({
           const newState =
             typeof updater === 'function'
               ? updater({
+                  animalIconType: currentAnimalIconType,
                   animalNum: currentAnimalNum,
                   retweetNum: currentRetweetNum,
                   favoriteNum: currentFavoriteNum,

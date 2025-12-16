@@ -1,4 +1,4 @@
-import { getRandomAnimalIcon } from '@/constants/animalIcons';
+import { ANIMAL_ICONS, getRandomAnimalIcon } from '@/constants/animalIcons';
 import { Tweet } from '@/stores/tabStore';
 import { GoogleGenAI } from '@google/genai';
 
@@ -6,21 +6,22 @@ const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
 // モデルとGoogle Search groundingの設定
-// フォールバック戦略: 検索機能付き上位モデル → 検索なし上位モデル → 軽量モデル → 旧モデル
+// フォールバック戦略: 検索機能付き上位モデル → 検索なし上位モデル → 軽量モデル
 // 2025年12月時点のレート制限（無料プラン）:
 // - Google Search使用時: 全モデル共通で20/日
-// - 検索なし: gemini-2.5-flash-lite (1000/日), gemini-2.0-flash (1500/日)
+// - 検索なし: gemini-2.5-flash (250/日), gemini-2.5-flash-lite (1000/日)
+// 注: gemini-1.5-flashは2025年9月29日に廃止されました
 type ModelConfig = {
   model: string;
   useSearch: boolean;
   quota: string;
 };
 
+// 検索頻度を減らすため、検索なしを優先
 const MODEL_FALLBACK_CHAIN: ModelConfig[] = [
   { model: 'gemini-2.5-flash', useSearch: true, quota: '20/日(検索)' },
   { model: 'gemini-2.5-flash', useSearch: false, quota: '250/日' },
   { model: 'gemini-2.5-flash-lite', useSearch: false, quota: '1000/日' },
-  { model: 'gemini-2.0-flash', useSearch: false, quota: '1500/日' },
 ];
 
 // assetsの画像をランダムに選択
@@ -64,7 +65,7 @@ export async function generateTweets(
 
       const topicInstruction = tabTitle ? `「${tabTitle}」に関する` : '';
       const prompt = `今日は${currentDate}です。${count}個の、${topicInstruction}ランダムなTwitterユーザーとそのツイートを生成してください。
-      タイトルに「最新」「速報」「ニュース」などの即時性に関するワードが入っている場合、${useSearch ? '最新の情報（${currentDate}時点）をGoogle検索で調べてください。' : '2024-2025年のトレンドを反映してください。'} 
+      ${useSearch ? 'タイトルに「本日」「今日」「速報」などの即時性の高いワードが入っている場合のみ、Google検索で最新情報（${currentDate}時点）を調べてください。それ以外の場合は検索せず、2024-2025年の一般的な知識で対応してください。' : '2024-2025年のトレンドを反映してください。'}
 各ユーザーは以下の形式のJSONオブジェクトで返してください：
 {
   "tweets": [
@@ -85,6 +86,7 @@ export async function generateTweets(
 JSONのみを返してください。他の説明は不要です。`;
 
       // Google Search grounding 設定（新SDK）
+      // 検索頻度を減らすために、プロンプト内で検索使用を制限
       const groundingTool = {
         googleSearch: {},
       };
@@ -210,19 +212,27 @@ JSONのみを返してください。他の説明は不要です。`;
         errorMessage.includes('429') ||
         errorMessage.includes('RESOURCE_EXHAUSTED') ||
         errorObj?.error?.code === 429;
+      const is503Error =
+        errorMessage.includes('503') ||
+        errorMessage.includes('UNAVAILABLE') ||
+        errorMessage.includes('overloaded') ||
+        errorObj?.error?.code === 503;
 
-      if (is429Error && configIndex < MODEL_FALLBACK_CHAIN.length - 1) {
-        // 429エラーの場合は静かに次のモデルへフォールバック（エラーログを出さない）
+      if ((is429Error || is503Error) && configIndex < MODEL_FALLBACK_CHAIN.length - 1) {
+        // 429/503エラーの場合は静かに次のモデルへフォールバック
+        const reason = is429Error ? 'quota exceeded' : 'server overloaded';
         console.log(
-          `[generateTweets] ${modelName} quota exceeded, trying next model (${MODEL_FALLBACK_CHAIN[configIndex + 1].model})...`
+          `[generateTweets] ${modelName} ${reason}, trying next model (${MODEL_FALLBACK_CHAIN[configIndex + 1].model})...`
         );
+        console.error(`[generateTweets] Error details:`, JSON.stringify(errorObj, null, 2));
         await sleep(1000);
         continue;
       }
 
       // その他のエラーの場合のみログを出力
-      if (!is429Error) {
+      if (!is429Error && !is503Error) {
         console.error(`[generateTweets] Model ${modelName} failed:`, errorMessage);
+        console.error(`[generateTweets] Full error object:`, JSON.stringify(errorObj, null, 2));
       }
 
       // その他のエラーまたは最後のモデルでも失敗時
@@ -231,8 +241,7 @@ JSONのみを返してください。他の説明は不要です。`;
   }
 
   // すべてのリトライが失敗した場合
-  const errorMsg =
-    'すべてのモデルで制限に達しました。フォールバック: gemini-2.5-flash(検索あり,20/日) → gemini-2.5-flash(検索なし,250/日) → gemini-2.5-flash-lite(検索なし,1000/日)。明日の午前9時(太平洋時間0時)にリセットされます。';
+  const errorMsg = 'AI生成エラー: すべてのモデルで制限に達しました。後でもう一度お試しください。';
 
   return [
     {
@@ -245,10 +254,194 @@ JSONのみを返してください。他の説明は不要です。`;
       favoriteNum: 0,
       impressionNum: 0,
       animalNum: 0,
-      animalIconType: getRandomAnimalIcon(),
+      animalIconType: ANIMAL_ICONS[0].type,
       isLiked: false,
       isRetweeted: false,
       isBookmarked: false,
+      isAnimaled: false,
+    },
+  ];
+}
+
+// 複数の返信を生成（5〜10件）
+type ReplyTweetData = {
+  name: string;
+  nameId: string;
+  message: string;
+};
+
+export async function generateReplyTweets(
+  originalMessage: string,
+  startId: number = 1
+): Promise<Tweet[]> {
+  const replyCount = Math.floor(Math.random() * 6) + 5; // 5〜10件
+
+  // モデルをフォールバックチェーンに沿って試行
+  for (let configIndex = 0; configIndex < MODEL_FALLBACK_CHAIN.length; configIndex++) {
+    const config = MODEL_FALLBACK_CHAIN[configIndex];
+    const { model: modelName, useSearch, quota } = config;
+
+    try {
+      console.log(
+        `[generateReplyTweets] Trying ${modelName} (検索: ${useSearch ? 'あり' : 'なし'}, 上限: ${quota})`
+      );
+
+      const prompt = `以下のツイートに対する返信を${replyCount}個生成してください：
+
+「${originalMessage}」
+
+各返信は以下の形式のJSONオブジェクトで返してください：
+{
+  "tweets": [
+    {
+      "name": "ユーザー名（日本語、3-8文字）",
+      "nameId": "ユーザーID（英数字、アンダースコア可）",
+      "message": "返信内容（日本語、10-140文字）"
+    }
+  ]
+}
+
+返信内容は、${originalMessage}が速報系、ネガティブ系である場合は批判的なツイートが、知識系である場合は追加知識が、それ以外の場合は共感が多めで生成してください。
+ツイート内容は現実のTwitterに即して、キラキラしすぎず、絵文字の使用も最小限にしてください（ツイート内容に応じて使っても構いません）。
+また、抽象的な名詞はできるだけ避け、具体的な商品名などの固有名詞を使用してください。固有名詞は鍵括弧で括らないでください。
+ツイート内容は主に短文で生成してください。ランダムに、単語のみ、長文などの他の形式も混ぜてください。
+
+JSONのみを返してください。他の説明は不要です。`;
+
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: prompt,
+        config: {},
+      });
+
+      const text = response.text || '';
+
+      if (!text || text.trim().length === 0) {
+        console.error(`[generateReplyTweets] Empty response from ${modelName}`);
+        throw new Error(`Empty response from ${modelName}`);
+      }
+
+      console.log('[generateReplyTweets] Raw AI response:', text);
+
+      // JSONを抽出
+      let jsonText = text;
+      jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+
+      let allTweets: ReplyTweetData[] = [];
+
+      // JSONオブジェクトを分割してパース
+      let depth = 0;
+      let currentJson = '';
+      const jsonObjects: string[] = [];
+
+      for (let i = 0; i < jsonText.length; i++) {
+        const char = jsonText[i];
+
+        if (char === '{') {
+          depth++;
+        } else if (char === '}') {
+          depth--;
+        }
+
+        currentJson += char;
+
+        if (depth === 0 && currentJson.trim().length > 0) {
+          jsonObjects.push(currentJson.trim());
+          currentJson = '';
+        }
+      }
+
+      jsonObjects.forEach((jsonObj) => {
+        try {
+          const parsed = JSON.parse(jsonObj);
+          if (parsed.tweets && Array.isArray(parsed.tweets)) {
+            allTweets = allTweets.concat(parsed.tweets);
+          }
+        } catch (e) {
+          console.warn('[generateReplyTweets] Failed to parse JSON object:', e);
+        }
+      });
+
+      console.log('[generateReplyTweets] Extracted replies count:', allTweets.length);
+
+      // Tweet型に変換
+      const tweets: Tweet[] = allTweets.map((tweet: ReplyTweetData, index: number) => {
+        const baseFavoriteNum = Math.floor(Math.random() * 500); // 0-500（返信なので控えめ）
+        const retweetRatio = 0.03 + Math.random() * 0.1; // 3-13%
+        const baseRetweetNum = Math.floor(baseFavoriteNum * retweetRatio);
+
+        return {
+          id: startId + index,
+          image: getRandomAvatar(),
+          name: tweet.name,
+          nameId: tweet.nameId,
+          message: tweet.message,
+          retweetNum: baseRetweetNum,
+          favoriteNum: baseFavoriteNum,
+          impressionNum: Math.floor(baseFavoriteNum * (1.3 + Math.random() * 0.5)), // いいねの1.3-1.8倍
+          animalNum: 0,
+          animalIconType: getRandomAnimalIcon(),
+          isLiked: false,
+          isRetweeted: false,
+          isBookmarked: undefined,
+          isAnimaled: false,
+        };
+      });
+
+      return tweets;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorObj = error as any;
+      const is429Error =
+        errorMessage.includes('429') ||
+        errorMessage.includes('RESOURCE_EXHAUSTED') ||
+        errorObj?.error?.code === 429;
+      const is503Error =
+        errorMessage.includes('503') ||
+        errorMessage.includes('UNAVAILABLE') ||
+        errorMessage.includes('overloaded') ||
+        errorObj?.error?.code === 503;
+
+      if ((is429Error || is503Error) && configIndex < MODEL_FALLBACK_CHAIN.length - 1) {
+        const reason = is429Error ? 'quota exceeded' : 'server overloaded';
+        console.log(
+          `[generateReplyTweets] ${modelName} ${reason}, trying next model (${MODEL_FALLBACK_CHAIN[configIndex + 1].model})...`
+        );
+        console.error(`[generateReplyTweets] Error details:`, JSON.stringify(errorObj, null, 2));
+        await sleep(1000);
+        continue;
+      }
+
+      if (!is429Error && !is503Error) {
+        console.error(`[generateReplyTweets] Model ${modelName} failed:`, errorMessage);
+        console.error(
+          `[generateReplyTweets] Full error object:`,
+          JSON.stringify(errorObj, null, 2)
+        );
+      }
+
+      break;
+    }
+  }
+
+  // すべてのリトライが失敗した場合
+  const errorMsg = 'AI生成エラー: すべてのモデルで制限に達しました。後でもう一度お試しください。';
+
+  return [
+    {
+      id: startId,
+      image: require('@/assets/icon1.png'),
+      name: 'システム通知',
+      nameId: 'system',
+      message: errorMsg,
+      retweetNum: 0,
+      favoriteNum: 0,
+      impressionNum: 0,
+      animalNum: 0,
+      animalIconType: ANIMAL_ICONS[0].type,
+      isLiked: false,
+      isRetweeted: false,
+      isBookmarked: undefined,
       isAnimaled: false,
     },
   ];

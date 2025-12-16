@@ -16,7 +16,7 @@ export type Tweet = {
   // ユーザーのインタラクション情報
   isLiked: boolean; // いいねしているか
   isRetweeted: boolean; // リツイートしているか
-  isBookmarked: boolean; // ブックマークしているか
+  isBookmarked: boolean | undefined; // ブックマークしているか
   isAnimaled: boolean; // 動物アイコンを押しているか
 };
 

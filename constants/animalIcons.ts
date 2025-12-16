@@ -17,14 +17,14 @@ export type AnimalIcon = {
 
 // 動物アイコンの設定（weightの合計は100推奨）
 export const ANIMAL_ICONS: AnimalIcon[] = [
-  { type: 'paw', name: '肉球', weight: 20 },
+  { type: 'paw', name: '肉球', weight: 30 },
   { type: 'cat', name: '猫', weight: 20 },
   { type: 'dog', name: '犬', weight: 20 },
   { type: 'frog', name: 'カエル', weight: 10 },
-  { type: 'dragon', name: 'ドラゴン', weight: 5 },
-  { type: 'kiwi-bird', name: 'キウイ', weight: 10 },
   { type: 'horse', name: '馬', weight: 10 },
-  { type: 'fish', name: '魚', weight: 5 },
+  { type: 'fish', name: '魚', weight: 7 },
+  { type: 'kiwi-bird', name: 'キウイ', weight: 2.5 },
+  { type: 'dragon', name: 'ドラゴン', weight: 0.5 },
 ];
 
 // ランダムに動物アイコンを選択
