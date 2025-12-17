@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
 export type Tweet = {
-  id: number;
+  id: string; // UUIDに変更
   image: any;
   name: string;
   nameId: string;
@@ -24,21 +24,21 @@ export type Tab = {
   id: string;
   title: string;
   icon: string;
-  tweetIds: number[]; // 表示中のツイートIDの配列
-  stockIds: number[]; // ストックされているツイートIDの配列
+  tweetIds: string[]; // UUIDに変更
+  stockIds: string[]; // UUIDに変更
   isGenerating: boolean; // ツイート生成中かどうか
 };
 
 type TabStore = {
   tabs: { [tabId: string]: Tab };
-  tweets: { [tweetId: number]: Tweet }; // 全ツイートを正規化して保存
+  tweets: { [tweetId: string]: Tweet }; // UUIDに変更
   activeTabId: string;
   tabOrder: string[]; // タブの順序を保持
   isHydrated: boolean; // ストレージからの読み込みが完了したか
 
   // 既存の関数
   addTweetToTab: (tabId: string, tweet: Tweet) => void;
-  removeTweetFromTab: (tabId: string, tweetId: number) => void;
+  removeTweetFromTab: (tabId: string, tweetId: string) => void; // UUIDに変更
   getTweetsForTab: (tabId: string) => Tweet[];
   getActiveTweets: () => Tweet[];
   getActiveTab: () => Tab | undefined;
@@ -48,7 +48,7 @@ type TabStore = {
   removeTab: (tabId: string) => void;
   getAllTabs: () => Tab[];
   updateTweetInteraction: (
-    tweetId: number,
+    tweetId: string, // UUIDに変更
     updates: Partial<
       Pick<
         Tweet,
@@ -464,7 +464,7 @@ export const useTabStore = create<TabStore>((set, get) => ({
 
       // ブックマークされたツイートを復元（既存のツイートとマージ）
       const currentState = get();
-      const tweets: { [tweetId: number]: Tweet } = { ...currentState.tweets };
+      const tweets: { [tweetId: string]: Tweet } = { ...currentState.tweets };
       loadedBookmarkedTweets.forEach((tweet: Tweet) => {
         tweets[tweet.id] = tweet;
       });
@@ -501,7 +501,7 @@ const saveTabs = async (tabs: { [tabId: string]: Tab }, tabOrder: string[]) => {
 };
 
 // ヘルパー関数: ブックマークされたツイートを保存
-const saveBookmarkedTweets = async (tweets: { [tweetId: number]: Tweet }) => {
+const saveBookmarkedTweets = async (tweets: { [tweetId: string]: Tweet }) => {
   try {
     const bookmarkedTweets = Object.values(tweets).filter((tweet) => tweet.isBookmarked);
     await AsyncStorage.setItem(STORAGE_KEYS.BOOKMARKED_TWEETS, JSON.stringify(bookmarkedTweets));

@@ -1,6 +1,8 @@
+import 'react-native-get-random-values'; // Must be imported before uuid
 import { ANIMAL_ICONS, getRandomAnimalIcon } from '@/constants/animalIcons';
 import { Tweet } from '@/stores/tabStore';
 import { GoogleGenAI } from '@google/genai';
+import { v4 as uuidv4 } from 'uuid';
 
 const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
@@ -43,7 +45,7 @@ async function sleep(ms: number) {
 
 export async function generateTweets(
   count: number = 5,
-  startId: number = 1,
+  startId: number = 1, // この引数は互換性のため残すが使用しない
   tabTitle?: string
 ): Promise<Tweet[]> {
   // モデルをフォールバックチェーンに沿って試行
@@ -180,13 +182,13 @@ JSONのみを返してください。他の説明は不要です。`;
       console.log('[generateTweets] Extracted tweets count:', allTweets.length);
 
       // 画像はassetsからランダムに割り当て、Tweet型に合わせて変換
-      const tweets: Tweet[] = allTweets.map((tweet: any, index: number) => {
+      const tweets: Tweet[] = allTweets.map((tweet: any) => {
         const baseFavoriteNum = Math.floor(Math.random() * 10001); // 0-10000
         const retweetRatio = 0.05 + Math.random() * 0.15; // 5-20%
         const baseRetweetNum = Math.floor(baseFavoriteNum * retweetRatio);
 
         return {
-          id: startId + index,
+          id: uuidv4(), // UUIDを使用
           image: getRandomAvatar(),
           name: tweet.name,
           nameId: tweet.nameId,
@@ -245,7 +247,7 @@ JSONのみを返してください。他の説明は不要です。`;
 
   return [
     {
-      id: startId,
+      id: uuidv4(), // UUIDを使用
       image: require('@/assets/icon1.png'),
       name: 'システム通知',
       nameId: 'system',
@@ -272,7 +274,7 @@ type ReplyTweetData = {
 
 export async function generateReplyTweets(
   originalMessage: string,
-  startId: number = 1
+  startId: number = 1 // この引数は互換性のため残すが使用しない
 ): Promise<Tweet[]> {
   const replyCount = Math.floor(Math.random() * 6) + 5; // 5〜10件
 
@@ -365,13 +367,13 @@ JSONのみを返してください。他の説明は不要です。`;
       console.log('[generateReplyTweets] Extracted replies count:', allTweets.length);
 
       // Tweet型に変換
-      const tweets: Tweet[] = allTweets.map((tweet: ReplyTweetData, index: number) => {
+      const tweets: Tweet[] = allTweets.map((tweet: ReplyTweetData) => {
         const baseFavoriteNum = Math.floor(Math.random() * 500); // 0-500（返信なので控えめ）
         const retweetRatio = 0.03 + Math.random() * 0.1; // 3-13%
         const baseRetweetNum = Math.floor(baseFavoriteNum * retweetRatio);
 
         return {
-          id: startId + index,
+          id: uuidv4(), // UUIDを使用
           image: getRandomAvatar(),
           name: tweet.name,
           nameId: tweet.nameId,
@@ -429,7 +431,7 @@ JSONのみを返してください。他の説明は不要です。`;
 
   return [
     {
-      id: startId,
+      id: uuidv4(), // UUIDを使用
       image: require('@/assets/icon1.png'),
       name: 'システム通知',
       nameId: 'system',

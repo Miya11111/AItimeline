@@ -22,7 +22,6 @@ export default function HomeScreen() {
   // Zustandから状態を取得
   const activeTabId = useTabStore((state) => state.activeTabId);
   const getTweetsForTab = useTabStore((state) => state.getTweetsForTab);
-  const getActiveTab = useTabStore((state) => state.getActiveTab);
   const getBookmarkedTweets = useTabStore((state) => state.getBookmarkedTweets);
   const isHydrated = useTabStore((state) => state.isHydrated);
   const tabs = useTabStore((state) => state.tabs);
@@ -45,37 +44,44 @@ export default function HomeScreen() {
     if (!isHydrated) return;
 
     const loadInitialTweets = async () => {
+      // タブIDをキャプチャ（非同期処理中にactiveTabIdが変わる可能性があるため）
+      const targetTabId = activeTabId;
+
       try {
-        const currentTab = getActiveTab();
+        // targetTabIdのタブを取得
+        const currentTab = tabs[targetTabId];
         if (!currentTab) return;
 
         // 既に表示されているツイートがある場合はスキップ
-        const existingTweets = getTweetsForTab(activeTabId);
+        const existingTweets = getTweetsForTab(targetTabId);
         if (existingTweets.length > 0) {
           setLoading(false);
           return;
         }
 
+        // 既に生成中の場合はスキップ
+        if (currentTab.isGenerating) {
+          setLoading(false);
+          return;
+        }
+
         // 生成中フラグを立てる
-        setGenerating(activeTabId, true);
+        setGenerating(targetTabId, true);
 
-        // 現在のタブの最大IDを取得
-        const maxId = 0;
-
-        // AIから20件のツイートを生成してストックに追加
-        console.log('[HomeScreen] Generating initial 30 tweets for stock...');
-        const aiTweets = await generateTweets(20, maxId + 1, currentTab.title);
-        addTweetsToStock(activeTabId, aiTweets);
+        // AIから20件のツイートを生成してストックに追加（UUIDを使用するため、maxIdは不要）
+        console.log('[HomeScreen] Generating initial 20 tweets for stock...');
+        const aiTweets = await generateTweets(20, 1, currentTab.title);
+        addTweetsToStock(targetTabId, aiTweets);
 
         // ストックから7〜10件をランダムに表示
-        const displayCount = Math.floor(Math.random() * 4) + 6; // 7 ~ 10
-        loadTweetsFromStock(activeTabId, displayCount);
+        const displayCount = Math.floor(Math.random() * 4) + 7; // 7 ~ 10
+        loadTweetsFromStock(targetTabId, displayCount);
 
         console.log(`[HomeScreen] Loaded ${displayCount} tweets from stock`);
       } catch (error) {
         console.error('Failed to load initial tweets:', error);
       } finally {
-        setGenerating(activeTabId, false);
+        setGenerating(targetTabId, false);
         setLoading(false);
       }
     };
@@ -84,43 +90,43 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+
+    // タブIDをキャプチャ（非同期処理中にactiveTabIdが変わる可能性があるため）
+    const targetTabId = activeTabId;
+
     try {
-      const currentTab = tabs[activeTabId];
+      const currentTab = tabs[targetTabId];
       if (!currentTab || currentTab.isGenerating) {
         setRefreshing(false);
         return;
       }
 
-      const stockCount = getStockCount(activeTabId);
+      const stockCount = getStockCount(targetTabId);
 
       // ストックが10件より多くある場合はストックから読み込む
       if (stockCount > 10) {
         console.log(`[HomeScreen] Loading from stock (${stockCount} available)`);
         await new Promise((resolve) => setTimeout(resolve, 1000)); // 1秒待機
         const displayCount = Math.floor(Math.random() * 4) + 7; // 7〜10
-        loadTweetsFromStock(activeTabId, displayCount);
+        loadTweetsFromStock(targetTabId, displayCount);
       } else {
         // ストックが10件以下の場合は新しく生成
         console.log(`[HomeScreen] Stock low (${stockCount}), generating new tweets...`);
-        setGenerating(activeTabId, true);
+        setGenerating(targetTabId, true);
 
-        // 現在のタブの最大IDを取得
-        const allTweets = Object.values(useTabStore.getState().tweets);
-        const maxId = allTweets.length > 0 ? Math.max(...allTweets.map((t) => t.id)) : 0;
-
-        // AIから20件のツイートを生成してストックに追加
-        const aiTweets = await generateTweets(20, maxId + 1, currentTab.title);
-        addTweetsToStock(activeTabId, aiTweets);
+        // AIから20件のツイートを生成してストックに追加（UUIDを使用するため、maxIdは不要）
+        const aiTweets = await generateTweets(20, 1, currentTab.title);
+        addTweetsToStock(targetTabId, aiTweets);
 
         // ストックから5〜7件を表示
-        const displayCount = Math.floor(Math.random() * 3) + 4; // 5〜7
-        loadTweetsFromStock(activeTabId, displayCount);
+        const displayCount = Math.floor(Math.random() * 3) + 5; // 5〜7
+        loadTweetsFromStock(targetTabId, displayCount);
 
-        setGenerating(activeTabId, false);
+        setGenerating(targetTabId, false);
       }
     } catch (error) {
       console.error('Failed to refresh tweets:', error);
-      setGenerating(activeTabId, false);
+      setGenerating(targetTabId, false);
     } finally {
       setRefreshing(false);
     }
