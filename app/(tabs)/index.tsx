@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 
+import EggAnimation from '@/components/molecules/EggAnimation';
 import Tweet from '@/components/organisms/Tweet';
 import { useColors } from '@/hooks/use-colors';
 import { generateTweets } from '@/services/aiService';
@@ -162,6 +163,7 @@ export default function HomeScreen() {
         >
           ツイートを生成しています。{'\n'}しばらくお待ちください。
         </Text>
+        <EggAnimation />
       </View>
     );
   }
