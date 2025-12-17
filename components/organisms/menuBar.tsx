@@ -250,19 +250,27 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                       opacity: achievementHeight,
                     }}
                   >
-                    {ANIMAL_ICONS.map((icon) => (
-                      <View key={icon.type} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Icon
-                          name={icon.type}
-                          family="FontAwesome6"
-                          size={16}
-                          color={colors.black}
-                        />
-                        <Text style={{ color: colors.black, paddingLeft: 8 }}>
-                          {achievements[icon.type]}
-                        </Text>
-                      </View>
-                    ))}
+                    {ANIMAL_ICONS.map((icon) => {
+                      const count = achievements[icon.type] ?? 0;
+                      return (
+                        <View
+                          key={icon.type}
+                          style={{ flexDirection: 'row', alignItems: 'center' }}
+                        >
+                          {count === 0 ? (
+                            <Text style={{ color: colors.black, fontSize: 16 }}>？</Text>
+                          ) : (
+                            <Icon
+                              name={icon.type}
+                              family="FontAwesome6"
+                              size={16}
+                              color={colors.black}
+                            />
+                          )}
+                          <Text style={{ color: colors.black, paddingLeft: 8 }}>{count}</Text>
+                        </View>
+                      );
+                    })}
                   </Animated.View>
                 )}
 

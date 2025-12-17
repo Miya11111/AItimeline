@@ -1,6 +1,6 @@
+import { AnimalIconType } from '@/constants/animalIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-import { AnimalIconType } from '@/constants/animalIcons';
 
 type AchievementStore = {
   achievements: { [key in AnimalIconType]: number };
@@ -16,11 +16,13 @@ const DEFAULT_ACHIEVEMENTS: { [key in AnimalIconType]: number } = {
   paw: 0,
   cat: 0,
   dog: 0,
+  dove: 0,
+  fish: 0,
   frog: 0,
+  horse: 0,
   dragon: 0,
   'kiwi-bird': 0,
-  horse: 0,
-  fish: 0,
+  child: 0,
 };
 
 export const useAchievementStore = create<AchievementStore>((set, get) => ({
