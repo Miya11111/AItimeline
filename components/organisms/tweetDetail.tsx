@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import IconButton from '../atoms/IconButton';
 import RoundImage from '../atoms/RoundImage';
 import AnimalIconButton from '../molecules/animalIconButton';
@@ -106,90 +107,52 @@ export default function TweetDetail({
             elevation: 5,
           }}
         >
-          <ScrollView style={{ flex: 1 }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.darkGray,
-              }}
-            >
-              <TouchableOpacity onPress={onClose}>
-                <Text style={{ fontSize: 24, color: colors.black }}>←</Text>
-              </TouchableOpacity>
-              <Text
+          <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+            <ScrollView style={{ flex: 1 }}>
+              <View
                 style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
-                  color: colors.black,
-                  marginLeft: 24,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.darkGray,
                 }}
               >
-                ツイート
-              </Text>
-            </View>
-            {/* プロフィール */}
-            <View style={{ padding: 12, flexDirection: 'row' }}>
-              <RoundImage source={image} size={40} />
-              <View style={{ flexDirection: 'column', marginHorizontal: 8 }}>
-                <Text style={{ color: colors.black, fontWeight: 'bold' }}>{name}</Text>
-                <Text style={{ color: colors.lightGray }}>@{nameId}</Text>
+                <TouchableOpacity onPress={onClose}>
+                  <Text style={{ fontSize: 24, color: colors.black }}>←</Text>
+                </TouchableOpacity>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    color: colors.black,
+                    marginLeft: 24,
+                  }}
+                >
+                  ツイート
+                </Text>
               </View>
-            </View>
-            {/* 本文 */}
-            <View
-              style={{
-                paddingLeft: 12,
-                paddingBottom: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.darkGray,
-              }}
-            >
-              <Text style={{ color: colors.black, fontSize: 18 }}>{message}</Text>
-            </View>
-            {/* リツイート、引用リツイート、いいね数 */}
-            <View
-              style={{
-                flexDirection: 'row',
-                padding: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.darkGray,
-              }}
-            >
-              <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}
+              {/* プロフィール */}
+              <View style={{ padding: 12, flexDirection: 'row' }}>
+                <RoundImage source={image} size={40} />
+                <View style={{ flexDirection: 'column', marginHorizontal: 8 }}>
+                  <Text style={{ color: colors.black, fontWeight: 'bold' }}>{name}</Text>
+                  <Text style={{ color: colors.lightGray }}>@{nameId}</Text>
+                </View>
+              </View>
+              {/* 本文 */}
+              <View
+                style={{
+                  paddingLeft: 12,
+                  paddingBottom: 12,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.darkGray,
+                }}
               >
-                <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
-                  {tweetState.retweetNum}
-                </Text>
-                <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
-                  リツイート
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}
-              >
-                <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
-                  {tweetState.retweetNum}
-                </Text>
-                <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
-                  件の引用
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}
-              >
-                <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
-                  {tweetState.favoriteNum}
-                </Text>
-                <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>いいね</Text>
-              </TouchableOpacity>
-            </View>
-            {/* ブックマーク */}
-            {tweetState.bookmark !== undefined && (
+                <Text style={{ color: colors.black, fontSize: 18 }}>{message}</Text>
+              </View>
+              {/* リツイート、引用リツイート、いいね数 */}
               <View
                 style={{
                   flexDirection: 'row',
@@ -198,119 +161,161 @@ export default function TweetDetail({
                   borderBottomColor: colors.darkGray,
                 }}
               >
-                <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
-                  {tweetState.retweetNum}
-                </Text>
-
-                <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
-                  ブックマーク
-                </Text>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}
+                >
+                  <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
+                    {tweetState.retweetNum}
+                  </Text>
+                  <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
+                    リツイート
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}
+                >
+                  <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
+                    {tweetState.retweetNum}
+                  </Text>
+                  <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
+                    件の引用
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}
+                >
+                  <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
+                    {tweetState.favoriteNum}
+                  </Text>
+                  <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
+                    いいね
+                  </Text>
+                </TouchableOpacity>
               </View>
-            )}
-            {/* 各アイコン */}
-            <View
-              style={{
-                flexDirection: 'row',
-                padding: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.darkGray,
-              }}
-            >
-              <AnimalIconButton
-                animalIconType={tweetState.animalIconType}
-                animalNum={tweetState.animalNum}
-                setAnimalNum={(num) => setTweetState((prev) => ({ ...prev, animalNum: num }))}
-                initialAnimalNum={initialAnimalNum}
-                isAnimaled={tweetState.isAnimaled}
-                isHideNumber
-                isJustifyContent
-                size={20}
-              />
-              <RetweetIconButton
-                retweetNum={tweetState.retweetNum}
-                setRetweetNum={(num) => setTweetState((prev) => ({ ...prev, retweetNum: num }))}
-                initialRetweetNum={initialRetweetNum}
-                isRetweet={tweetState.isRetweeted}
-                isHideNumber
-                isJustifyContent
-                size={20}
-              />
-              <FavIconButton
-                favoriteNum={tweetState.favoriteNum}
-                setFavoriteNum={(num) => setTweetState((prev) => ({ ...prev, favoriteNum: num }))}
-                initialFavoriteNum={initialFavoriteNum}
-                isFavorited={tweetState.isLiked}
-                isHideNumber
-                isJustifyContent
-                size={20}
-              />
+              {/* ブックマーク */}
               {tweetState.bookmark !== undefined && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    padding: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.darkGray,
+                  }}
+                >
+                  <Text style={{ color: colors.black, fontWeight: 'bold', fontSize: 16 }}>
+                    {tweetState.retweetNum}
+                  </Text>
+
+                  <Text style={{ color: colors.lightGray, marginLeft: 4, fontSize: 16 }}>
+                    ブックマーク
+                  </Text>
+                </View>
+              )}
+              {/* 各アイコン */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  padding: 12,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.darkGray,
+                }}
+              >
+                <AnimalIconButton
+                  animalIconType={tweetState.animalIconType}
+                  animalNum={tweetState.animalNum}
+                  setAnimalNum={(num) => setTweetState((prev) => ({ ...prev, animalNum: num }))}
+                  initialAnimalNum={initialAnimalNum}
+                  isAnimaled={tweetState.isAnimaled}
+                  isHideNumber
+                  isJustifyContent
+                  size={20}
+                />
+                <RetweetIconButton
+                  retweetNum={tweetState.retweetNum}
+                  setRetweetNum={(num) => setTweetState((prev) => ({ ...prev, retweetNum: num }))}
+                  initialRetweetNum={initialRetweetNum}
+                  isRetweet={tweetState.isRetweeted}
+                  isHideNumber
+                  isJustifyContent
+                  size={20}
+                />
+                <FavIconButton
+                  favoriteNum={tweetState.favoriteNum}
+                  setFavoriteNum={(num) => setTweetState((prev) => ({ ...prev, favoriteNum: num }))}
+                  initialFavoriteNum={initialFavoriteNum}
+                  isFavorited={tweetState.isLiked}
+                  isHideNumber
+                  isJustifyContent
+                  size={20}
+                />
+                {tweetState.bookmark !== undefined && (
+                  <IconButton
+                    icon={{
+                      name: 'bookmark',
+                      size: 20,
+                      color: tweetState.bookmark ? colors.blue : colors.lightGray,
+                    }}
+                    onPress={handleBookmarkPress}
+                    isJustifyContent
+                  />
+                )}
                 <IconButton
                   icon={{
-                    name: 'bookmark',
+                    name: 'share-nodes',
+                    family: 'FontAwesome6',
                     size: 20,
-                    color: tweetState.bookmark ? colors.blue : colors.lightGray,
+                    color: colors.lightGray,
                   }}
-                  onPress={handleBookmarkPress}
                   isJustifyContent
                 />
+              </View>
+              {/* AI返信生成ボタン */}
+              {!finishGenerateReply && (
+                <View style={{ padding: 10 }}>
+                  {isGeneratingReply ? (
+                    <View style={{ padding: 10 }}>
+                      <ActivityIndicator color={colors.blue} />
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={handleGenerateReply}
+                      style={{
+                        padding: 10,
+                        borderRadius: 20,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ color: colors.blue, fontSize: 16 }}>返信を表示</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               )}
-              <IconButton
-                icon={{
-                  name: 'share-nodes',
-                  family: 'FontAwesome6',
-                  size: 20,
-                  color: colors.lightGray,
-                }}
-                isJustifyContent
-              />
-            </View>
-            {/* AI返信生成ボタン */}
-            {!finishGenerateReply && (
-              <View style={{ padding: 10 }}>
-                {isGeneratingReply ? (
-                  <View style={{ padding: 10 }}>
-                    <ActivityIndicator color={colors.blue} />
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    onPress={handleGenerateReply}
-                    style={{
-                      padding: 10,
-                      borderRadius: 20,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Text style={{ color: colors.blue, fontSize: 16 }}>返信を表示</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
 
-            {/* 生成された返信 */}
-            {generatedReplies.length > 0 && (
-              <View>
-                {generatedReplies.map((reply) => (
-                  <Tweet
-                    key={reply.id}
-                    id={reply.id}
-                    image={reply.image}
-                    name={reply.name}
-                    nameId={reply.nameId}
-                    message={reply.message}
-                    retweetNum={reply.retweetNum}
-                    favoriteNum={reply.favoriteNum}
-                    impressionNum={reply.impressionNum}
-                    animalNum={reply.animalNum}
-                    animalIconType={reply.animalIconType}
-                    isLiked={reply.isLiked}
-                    isRetweeted={reply.isRetweeted}
-                    isAnimaled={reply.isAnimaled}
-                  />
-                ))}
-              </View>
-            )}
-          </ScrollView>
+              {/* 生成された返信 */}
+              {generatedReplies.length > 0 && (
+                <View>
+                  {generatedReplies.map((reply) => (
+                    <Tweet
+                      key={reply.id}
+                      id={reply.id}
+                      image={reply.image}
+                      name={reply.name}
+                      nameId={reply.nameId}
+                      message={reply.message}
+                      retweetNum={reply.retweetNum}
+                      favoriteNum={reply.favoriteNum}
+                      impressionNum={reply.impressionNum}
+                      animalNum={reply.animalNum}
+                      animalIconType={reply.animalIconType}
+                      isLiked={reply.isLiked}
+                      isRetweeted={reply.isRetweeted}
+                      isAnimaled={reply.isAnimaled}
+                    />
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+          </SafeAreaView>
         </Animated.View>
       </View>
     </Modal>

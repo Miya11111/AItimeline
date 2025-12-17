@@ -14,6 +14,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import RoundImage from '../atoms/RoundImage';
 import { Icon } from '../atoms/icon';
 import AddTabModal from '../molecules/addTabModal';
@@ -166,7 +167,7 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                 elevation: 5,
               }}
             >
-              <View style={{ flex: 1 }}>
+              <SafeAreaView style={{ flex: 1 }} edges={['top']}>
                 {/* ヘッダー */}
                 <View
                   style={{
@@ -305,7 +306,7 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                 <View style={{ marginTop: 'auto', marginBottom: 24 }}>
                   <SelectLangPulldown />
                 </View>
-              </View>
+              </SafeAreaView>
             </Animated.View>
           </TouchableWithoutFeedback>
         </View>
