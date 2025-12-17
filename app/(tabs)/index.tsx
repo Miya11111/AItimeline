@@ -39,13 +39,19 @@ export default function HomeScreen() {
       ? getBookmarkedTweets().reverse()
       : getTweetsForTab(activeTabId).reverse();
 
-  // 初回読み込み時にツイートを生成してストック（hydrateが完了してから）
+  // 初回読み込み時とタブ切り替え時にツイートを生成してストック（hydrateが完了してから）
   useEffect(() => {
     if (!isHydrated) return;
 
     const loadInitialTweets = async () => {
       // タブIDをキャプチャ（非同期処理中にactiveTabIdが変わる可能性があるため）
       const targetTabId = activeTabId;
+
+      // ブックマークタブの場合はツイート生成をスキップ
+      if (targetTabId === 'bookmarks') {
+        setLoading(false);
+        return;
+      }
 
       try {
         // targetTabIdのタブを取得
@@ -64,6 +70,9 @@ export default function HomeScreen() {
           setLoading(false);
           return;
         }
+
+        // タブ切り替え時にローディング画面を表示
+        setLoading(true);
 
         // 生成中フラグを立てる
         setGenerating(targetTabId, true);
@@ -93,6 +102,12 @@ export default function HomeScreen() {
 
     // タブIDをキャプチャ（非同期処理中にactiveTabIdが変わる可能性があるため）
     const targetTabId = activeTabId;
+
+    // ブックマークタブの場合はリフレッシュしない
+    if (targetTabId === 'bookmarks') {
+      setRefreshing(false);
+      return;
+    }
 
     try {
       const currentTab = tabs[targetTabId];

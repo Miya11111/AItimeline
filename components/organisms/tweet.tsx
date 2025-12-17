@@ -50,11 +50,6 @@ export default function Tweet({
   const incrementAnimal = useAchievementStore((state) => state.incrementAnimal);
   const decrementAnimal = useAchievementStore((state) => state.decrementAnimal);
 
-  // 生成中かどうかを取得
-  const activeTabId = useTabStore((state) => state.activeTabId);
-  const tabs = useTabStore((state) => state.tabs);
-  const isGenerating = tabs[activeTabId]?.isGenerating ?? false;
-
   // Zustandから最新の状態を個別に取得（パフォーマンスとリアクティビティのため）
   const currentRetweetNum = useTabStore((state) => state.tweets[id]?.retweetNum ?? retweetNum);
   const currentFavoriteNum = useTabStore((state) => state.tweets[id]?.favoriteNum ?? favoriteNum);
@@ -89,9 +84,6 @@ export default function Tweet({
 
   // ツイートの詳細モーダルを表示
   const handleTweetPress = () => {
-    // 生成中は詳細画面を開かない
-    if (isGenerating) return;
-
     setSidebarVisible(true);
     Animated.timing(slideAnim, {
       toValue: 0,

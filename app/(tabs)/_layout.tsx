@@ -28,15 +28,7 @@ export default function TabLayout() {
   const getActiveTab = useTabStore((state) => state.getActiveTab);
   const activeTab = getActiveTab();
 
-  // 生成中かどうかを取得
-  const activeTabId = useTabStore((state) => state.activeTabId);
-  const tabs = useTabStore((state) => state.tabs);
-  const isGenerating = tabs[activeTabId]?.isGenerating ?? false;
-
   const openMenu = () => {
-    // 生成中はメニューを開かない
-    if (isGenerating) return;
-
     setMenuVisible(true);
     Animated.spring(menuSlideAnim, {
       toValue: 0,
