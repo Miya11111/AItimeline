@@ -1,6 +1,6 @@
 import { useColors } from '@/hooks/use-colors';
 import { Text, TouchableOpacity } from 'react-native';
-import { Icon, IconProps } from './icon';
+import { Icon, IconProps } from './Icon';
 
 type IconButtonProps = {
   icon: IconProps;

@@ -16,10 +16,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import IconButton from '../atoms/IconButton';
 import RoundImage from '../atoms/RoundImage';
-import AnimalIconButton from '../molecules/animalIconButton';
-import FavIconButton from '../molecules/favIconButton';
-import RetweetIconButton from '../molecules/retweetButton';
-import Tweet from './tweet';
+import AnimalIconButton from '../molecules/AnimalIconButton';
+import FavIconButton from '../molecules/FavIconButton';
+import RetweetIconButton from '../molecules/RetweetButton';
+import Tweet from './Tweet';
 
 type TweetState = {
   animalIconType: AnimalIconType;

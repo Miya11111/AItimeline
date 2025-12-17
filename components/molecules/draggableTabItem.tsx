@@ -2,7 +2,7 @@ import { useColors } from '@/hooks/use-colors';
 import { Tab } from '@/stores/tabStore';
 import { useMemo, useRef } from 'react';
 import { Animated, PanResponder, Text, TouchableOpacity, View } from 'react-native';
-import { Icon } from '../atoms/icon';
+import { Icon } from '../atoms/Icon';
 
 type DraggableTabItemProps = {
   tab: Tab;

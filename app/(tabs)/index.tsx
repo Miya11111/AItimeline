@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 
-import Tweet from '@/components/organisms/tweet';
+import Tweet from '@/components/organisms/Tweet';
 import { useColors } from '@/hooks/use-colors';
 import { generateTweets } from '@/services/aiService';
 import { useTabStore } from '@/stores/tabStore';

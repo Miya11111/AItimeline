@@ -3,11 +3,11 @@ import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, TouchableOpacity } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
+import MenuBar from '@/components/organisms/MenuBar';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import MenuBar from '@/components/organisms/menuBar';
 import { useColors } from '@/hooks/use-colors';
-import { t } from 'i18next';
 import { useTabStore } from '@/stores/tabStore';
+import { t } from 'i18next';
 
 export const TabLayoutLangJa = {
   home: 'ホーム',

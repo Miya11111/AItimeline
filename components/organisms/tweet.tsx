@@ -4,16 +4,16 @@ import { useAchievementStore } from '@/stores/achievementStore';
 import { useTabStore } from '@/stores/tabStore';
 import { useState } from 'react';
 import { Animated, ImageSourcePropType, Text, TouchableOpacity, View } from 'react-native';
-import { Icon } from '../atoms/icon';
+import { Icon } from '../atoms/Icon';
 import IconButton from '../atoms/IconButton';
 import RoundImage from '../atoms/RoundImage';
-import AnimalIconButton from '../molecules/animalIconButton';
-import FavIconButton from '../molecules/favIconButton';
-import RetweetIconButton from '../molecules/retweetButton';
-import TweetDetail from './tweetDetail';
+import AnimalIconButton from '../molecules/AnimalIconButton';
+import FavIconButton from '../molecules/FavIconButton';
+import RetweetIconButton from '../molecules/RetweetButton';
+import TweetDetail from './TweetDetail';
 
 export type TweetType = {
-  id: number;
+  id: string;
   image: ImageSourcePropType;
   name: string;
   nameId: string;

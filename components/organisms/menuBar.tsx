@@ -1,7 +1,7 @@
-import { useColors } from '@/hooks/use-colors';
-import { useTabStore } from '@/stores/tabStore';
-import { useAchievementStore } from '@/stores/achievementStore';
 import { ANIMAL_ICONS } from '@/constants/animalIcons';
+import { useColors } from '@/hooks/use-colors';
+import { useAchievementStore } from '@/stores/achievementStore';
+import { useTabStore } from '@/stores/tabStore';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -15,12 +15,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon } from '../atoms/Icon';
 import RoundImage from '../atoms/RoundImage';
-import { Icon } from '../atoms/icon';
-import AddTabModal from '../molecules/addTabModal';
-import DraggableTabItem from '../molecules/draggableTabItem';
-import EditTabTitleModal from '../molecules/editTabTitleModal';
-import SelectLangPulldown from '../molecules/selectLangPulldown';
+import AddTabModal from '../molecules/AddTabModal';
+import DraggableTabItem from '../molecules/DraggableTabItem';
+import EditTabTitleModal from '../molecules/EditTabTitleModal';
+import SelectLangPulldown from '../molecules/SelectLangPulldown';
 
 type MenuBarProps = {
   visible: boolean;

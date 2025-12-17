@@ -1,7 +1,7 @@
 import { useColors } from '@/hooks/use-colors';
 import { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { Icon } from '../atoms/icon';
+import { Icon } from '../atoms/Icon';
 
 type SelectLangPulldownProps = {
   onLanguageChange?: (language: string) => void;
