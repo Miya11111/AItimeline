@@ -24,9 +24,14 @@ export default function TabLayout() {
   const menuWidth = screenWidth * 0.75;
   const menuSlideAnim = useRef(new Animated.Value(-menuWidth)).current;
 
-  // Zustandからアクティブタブを取得
-  const getActiveTab = useTabStore((state) => state.getActiveTab);
-  const activeTab = getActiveTab();
+  // Zustandからアクティブタブとタブ順序を取得
+  const activeTab = useTabStore((state) => state.getActiveTab());
+  const tabOrder = useTabStore((state) => state.tabOrder);
+  const tabs = useTabStore((state) => state.tabs);
+
+  // タブ順序の最初のタブ（bookmarks以外）を取得
+  const firstTab = tabOrder.find((id) => id !== 'bookmarks');
+  const displayTab = activeTab || (firstTab ? tabs[firstTab] : undefined);
 
   const openMenu = () => {
     setMenuVisible(true);
@@ -57,6 +62,7 @@ export default function TabLayout() {
           headerShown: true,
           headerTitleAlign: 'center',
           tabBarButton: HapticTab,
+          tabBarShowLabel: false,
           headerStyle: {
             borderBottomWidth: 1,
             borderBottomColor: colors.darkGray,
@@ -66,7 +72,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: activeTab?.title || t('tabLayout.home'),
+            title: displayTab?.title || t('tabLayout.home'),
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
             headerLeft: () => (
               <TouchableOpacity
@@ -85,7 +91,7 @@ export default function TabLayout() {
           options={{
             title: 'Explore',
             tabBarIcon: ({ color }) => (
-              <IconSymbol size={28} name="paperplane.fill" color={color} />
+              <IconSymbol size={28} name="magnifyingglass" color={color} />
             ),
           }}
         />
