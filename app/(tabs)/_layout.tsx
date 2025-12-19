@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { Animated, Dimensions, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import MenuBar from '@/components/organisms/MenuBar';
@@ -80,6 +80,11 @@ export default function TabLayout() {
     }
   };
 
+  // 検索クリア
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
   return (
     <>
       <MenuBar visible={menuVisible} onClose={closeMenu} slideAnim={menuSlideAnim} />
@@ -155,6 +160,19 @@ export default function TabLayout() {
                       color: colors.black,
                     }}
                   />
+                  {searchQuery.length > 0 && (
+                    <TouchableOpacity
+                      onPress={handleClearSearch}
+                      style={{
+                        padding: 4,
+                      }}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Text style={{ color: colors.lightGray, fontSize: 20, fontWeight: 'bold' }}>
+                        ×
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             ),

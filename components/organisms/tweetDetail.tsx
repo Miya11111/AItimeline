@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import IconButton from '../atoms/IconButton';
 import RoundImage from '../atoms/RoundImage';
 import AnimalIconButton from '../molecules/AnimalIconButton';
+import EggAnimation from '../molecules/EggAnimation';
 import FavIconButton from '../molecules/FavIconButton';
 import RetweetIconButton from '../molecules/RetweetButton';
 import Tweet from './Tweet';
@@ -275,6 +276,7 @@ export default function TweetDetail({
                   {isGeneratingReply ? (
                     <View style={{ padding: 10 }}>
                       <ActivityIndicator color={colors.blue} />
+                      <EggAnimation />
                     </View>
                   ) : (
                     <TouchableOpacity

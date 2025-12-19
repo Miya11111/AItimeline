@@ -1,7 +1,7 @@
-import 'react-native-get-random-values'; // Must be imported before uuid
 import { ANIMAL_ICONS, getRandomAnimalIcon } from '@/constants/animalIcons';
 import { Tweet } from '@/stores/tabStore';
 import { GoogleGenAI } from '@google/genai';
+import 'react-native-get-random-values'; // Must be imported before uuid
 import { v4 as uuidv4 } from 'uuid';
 import { getApiKey } from './apiKeyService';
 
@@ -475,7 +475,7 @@ export async function generateSearchTweets(searchQuery: string): Promise<Tweet[]
         day: 'numeric',
       });
 
-      const prompt = `今日は${currentDate}です。「${searchQuery}」に関する詳細な情報を含むツイートを${tweetCount}個生成してください。
+      const prompt = `今日は${currentDate}です。「${searchQuery}」に関する概要と、詳細な情報を含むツイートを${tweetCount}個生成してください。
 ${useSearch ? 'Google検索で最新情報（' + currentDate + '時点）を調べて、正確な情報を提供してください。' : '2024-2025年の一般的な知識で対応してください。'}
 
 各ツイートは以下の形式のJSONオブジェクトで返してください：

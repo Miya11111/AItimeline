@@ -1,9 +1,10 @@
+import EggAnimation from '@/components/molecules/EggAnimation';
+import Tweet from '@/components/organisms/Tweet';
+import { useColors } from '@/hooks/use-colors';
+import { generateSearchTweets } from '@/services/aiService';
+import { useSearchStore } from '@/stores/searchStore';
 import { useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { useColors } from '@/hooks/use-colors';
-import { useSearchStore } from '@/stores/searchStore';
-import { generateSearchTweets } from '@/services/aiService';
-import Tweet from '@/components/organisms/Tweet';
 
 export default function TabTwoScreen() {
   const colors = useColors();
@@ -37,6 +38,7 @@ export default function TabTwoScreen() {
         <Text style={{ marginTop: 16, fontSize: 16, color: colors.black }}>
           「{searchQuery}」を検索中...
         </Text>
+        <EggAnimation />
       </View>
     );
   }
