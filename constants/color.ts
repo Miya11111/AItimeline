@@ -34,9 +34,13 @@ export const colors = {
     light: '#dfdfdfff',
     dark: '#9BA1A6',
   },
-  darkGray: {
+  gray: {
     light: '#b4b4b4ff',
     dark: '#57595aff',
+  },
+  darkGray: {
+    light: '#838383ff',
+    dark: '#2b2b2bff',
   },
 
   // Whites & Blacks
@@ -47,28 +51,6 @@ export const colors = {
   black: {
     light: '#000',
     dark: '#fff',
-  },
-
-  // UI Colors
-  background: {
-    light: '#fff',
-    dark: '#000',
-  },
-  surface: {
-    light: '#f5f5f5',
-    dark: '#1a1a1a',
-  },
-  border: {
-    light: '#e0e0e0',
-    dark: '#333',
-  },
-  text: {
-    light: '#000',
-    dark: '#fff',
-  },
-  error: {
-    light: '#d32f2f',
-    dark: '#f44336',
   },
 } as const;
 

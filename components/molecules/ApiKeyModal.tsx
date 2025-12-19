@@ -153,7 +153,7 @@ export default function ApiKeyModal({ visible, onClose, isFirstTime = false }: A
       >
         <View
           style={{
-            backgroundColor: colors.background,
+            backgroundColor: colors.white,
             borderRadius: 16,
             padding: 24,
             width: modalWidth,
@@ -164,7 +164,7 @@ export default function ApiKeyModal({ visible, onClose, isFirstTime = false }: A
             style={{
               fontSize: 20,
               fontWeight: 'bold',
-              color: colors.text,
+              color: colors.black,
               marginBottom: 16,
               textAlign: 'center',
             }}
@@ -187,7 +187,7 @@ export default function ApiKeyModal({ visible, onClose, isFirstTime = false }: A
                 <Text
                   style={{
                     fontSize: 14,
-                    color: colors.text,
+                    color: colors.black,
                     marginBottom: 16,
                     lineHeight: 20,
                     textAlign: 'center',
@@ -263,13 +263,13 @@ export default function ApiKeyModal({ visible, onClose, isFirstTime = false }: A
             placeholder="ここにAPIキーを貼りつけてください"
             placeholderTextColor={colors.lightGray}
             style={{
-              backgroundColor: colors.surface,
-              color: colors.text,
+              backgroundColor: colors.darkGray,
+              color: colors.black,
               padding: 12,
               borderRadius: 8,
               marginBottom: 16,
               borderWidth: 1,
-              borderColor: colors.border,
+              borderColor: colors.gray,
             }}
             autoCapitalize="none"
             autoCorrect={false}
@@ -302,15 +302,15 @@ export default function ApiKeyModal({ visible, onClose, isFirstTime = false }: A
               disabled={isValidating}
               style={{
                 flex: 1,
-                backgroundColor: colors.surface,
+                backgroundColor: colors.darkGray,
                 padding: 12,
                 borderRadius: 8,
                 alignItems: 'center',
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: colors.gray,
               }}
             >
-              <Text style={{ color: colors.text, fontWeight: 'bold' }}>
+              <Text style={{ color: colors.black, fontWeight: 'bold' }}>
                 {isFirstTime ? 'スキップ' : 'キャンセル'}
               </Text>
             </TouchableOpacity>
@@ -328,7 +328,7 @@ export default function ApiKeyModal({ visible, onClose, isFirstTime = false }: A
                 alignItems: 'center',
               }}
             >
-              <Text style={{ color: colors.error, fontWeight: 'bold' }}>APIキーを削除</Text>
+              <Text style={{ color: colors.red, fontWeight: 'bold' }}>APIキーを削除</Text>
             </TouchableOpacity>
           )}
         </View>

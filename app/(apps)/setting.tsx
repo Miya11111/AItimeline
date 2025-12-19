@@ -1,9 +1,9 @@
+import ApiKeyModal from '@/components/molecules/ApiKeyModal';
 import { useColors } from '@/hooks/use-colors';
+import { getApiKey } from '@/services/apiKeyService';
 import { useEffect, useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ApiKeyModal from '@/components/molecules/ApiKeyModal';
-import { getApiKey } from '@/services/apiKeyService';
 
 export default function Setting() {
   const colors = useColors();
@@ -75,12 +75,12 @@ export default function Setting() {
               editable={false}
               style={{
                 flex: 1,
-                backgroundColor: colors.surface,
+                backgroundColor: colors.darkGray,
                 color: colors.black,
                 padding: 12,
                 borderRadius: 8,
                 borderWidth: 1,
-                borderColor: colors.border,
+                borderColor: colors.gray,
               }}
             />
 

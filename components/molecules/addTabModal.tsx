@@ -57,7 +57,7 @@ export default function AddTabModal({ visible, onClose, onConfirm }: AddTabModal
           <TextInput
             style={{
               borderWidth: 1,
-              borderColor: colors.darkGray,
+              borderColor: colors.gray,
               borderRadius: 8,
               padding: 12,
               fontSize: 16,
@@ -80,7 +80,7 @@ export default function AddTabModal({ visible, onClose, onConfirm }: AddTabModal
                 paddingHorizontal: 20,
                 borderRadius: 8,
                 borderWidth: 1,
-                borderColor: colors.darkGray,
+                borderColor: colors.gray,
               }}
             >
               <Text style={{ color: colors.black, fontSize: 16 }}>キャンセル</Text>
