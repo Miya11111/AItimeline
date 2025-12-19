@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 
+import ApiKeyModal from '@/components/molecules/ApiKeyModal';
 import EggAnimation from '@/components/molecules/EggAnimation';
 import Tweet from '@/components/organisms/Tweet';
 import { useColors } from '@/hooks/use-colors';
@@ -19,6 +20,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   // Zustandから状態を取得
   const activeTabId = useTabStore((state) => state.activeTabId);
@@ -169,43 +171,52 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.blue}
-          colors={[colors.blue]}
-          progressBackgroundColor={colors.white}
-        />
-      }
-    >
-      {/* つぶやきタブ */}
-      {tweets.length === 0 ? (
-        <View style={{ padding: 20, alignItems: 'center' }}>
-          <Text style={{ color: colors.lightGray, fontSize: 16 }}>ツイートがありません</Text>
-        </View>
-      ) : (
-        tweets.map((tweet) => (
-          <Tweet
-            key={tweet.id}
-            id={tweet.id}
-            image={tweet.image}
-            name={tweet.name}
-            nameId={tweet.nameId}
-            message={tweet.message}
-            retweetNum={tweet.retweetNum}
-            favoriteNum={tweet.favoriteNum}
-            impressionNum={tweet.impressionNum}
-            animalNum={tweet.animalNum}
-            animalIconType={tweet.animalIconType}
-            isLiked={tweet.isLiked}
-            isRetweeted={tweet.isRetweeted}
-            isBookmarked={tweet.isBookmarked}
-            isAnimaled={tweet.isAnimaled}
+    <>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.blue}
+            colors={[colors.blue]}
+            progressBackgroundColor={colors.white}
           />
-        ))
-      )}
-    </ScrollView>
+        }
+      >
+        {/* つぶやきタブ */}
+        {tweets.length === 0 ? (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text style={{ color: colors.lightGray, fontSize: 16 }}>ツイートがありません</Text>
+          </View>
+        ) : (
+          tweets.map((tweet) => (
+            <Tweet
+              key={tweet.id}
+              id={tweet.id}
+              image={tweet.image}
+              name={tweet.name}
+              nameId={tweet.nameId}
+              message={tweet.message}
+              retweetNum={tweet.retweetNum}
+              favoriteNum={tweet.favoriteNum}
+              impressionNum={tweet.impressionNum}
+              animalNum={tweet.animalNum}
+              animalIconType={tweet.animalIconType}
+              isLiked={tweet.isLiked}
+              isRetweeted={tweet.isRetweeted}
+              isBookmarked={tweet.isBookmarked}
+              isAnimaled={tweet.isAnimaled}
+            />
+          ))
+        )}
+      </ScrollView>
+
+      {/* APIキー設定モーダル */}
+      <ApiKeyModal
+        visible={showApiKeyModal}
+        onClose={() => setShowApiKeyModal(false)}
+        isFirstTime={false}
+      />
+    </>
   );
 }

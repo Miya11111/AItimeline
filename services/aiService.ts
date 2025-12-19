@@ -3,9 +3,13 @@ import { ANIMAL_ICONS, getRandomAnimalIcon } from '@/constants/animalIcons';
 import { Tweet } from '@/stores/tabStore';
 import { GoogleGenAI } from '@google/genai';
 import { v4 as uuidv4 } from 'uuid';
+import { getApiKey } from './apiKeyService';
 
-const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+// AIインスタンスを動的に初期化
+async function getAI(): Promise<GoogleGenAI> {
+  const apiKey = await getApiKey();
+  return new GoogleGenAI({ apiKey });
+}
 
 // モデルとGoogle Search groundingの設定
 // フォールバック戦略: 検索機能付き上位モデル → 検索なし上位モデル → 軽量モデル
@@ -100,6 +104,7 @@ JSONのみを返してください。他の説明は不要です。`;
         : {};
 
       // 新SDKでのAPI呼び出し
+      const ai = await getAI();
       const response = await ai.models.generateContent({
         model: modelName,
         contents: prompt,
@@ -310,6 +315,7 @@ export async function generateReplyTweets(
 
 JSONのみを返してください。他の説明は不要です。`;
 
+      const ai = await getAI();
       const response = await ai.models.generateContent({
         model: modelName,
         contents: prompt,

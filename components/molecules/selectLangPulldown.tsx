@@ -22,7 +22,7 @@ export default function SelectLangPulldown({ onLanguageChange }: SelectLangPulld
   };
 
   return (
-    <View style={{ paddingHorizontal: 80, paddingBottom: 20 }}>
+    <View style={{ paddingHorizontal: 80, paddingBottom: 12 }}>
       {isLanguageDropdownOpen && (
         <View
           style={{

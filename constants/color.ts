@@ -48,6 +48,28 @@ export const colors = {
     light: '#000',
     dark: '#fff',
   },
+
+  // UI Colors
+  background: {
+    light: '#fff',
+    dark: '#000',
+  },
+  surface: {
+    light: '#f5f5f5',
+    dark: '#1a1a1a',
+  },
+  border: {
+    light: '#e0e0e0',
+    dark: '#333',
+  },
+  text: {
+    light: '#000',
+    dark: '#fff',
+  },
+  error: {
+    light: '#d32f2f',
+    dark: '#f44336',
+  },
 } as const;
 
 /**

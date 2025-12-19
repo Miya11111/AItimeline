@@ -311,9 +311,24 @@ export default function MenuBar({ visible, onClose, slideAnim }: MenuBarProps) {
                 </View>
 
                 {/* 言語選択 */}
-                <View style={{ marginTop: 'auto', marginBottom: 24 }}>
+                <View style={{ marginTop: 'auto' }}>
                   <SelectLangPulldown />
                 </View>
+
+                {/* 設定 */}
+                <TouchableOpacity
+                  onPress={() => router.push('/setting')}
+                  style={{
+                    marginBottom: 20,
+                    marginHorizontal: 96,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Icon name="settings-outline" size={20} color={colors.blue} />
+                  <Text style={{ color: colors.blue, marginLeft: 8 }}>設定</Text>
+                </TouchableOpacity>
               </SafeAreaView>
             </Animated.View>
           </TouchableWithoutFeedback>
