@@ -63,7 +63,7 @@ export default function Tweet({
   const currentIsLiked = useTabStore((state) => state.tweets[id]?.isLiked ?? isLiked);
   const currentIsRetweeted = useTabStore((state) => state.tweets[id]?.isRetweeted ?? isRetweeted);
   const currentIsBookmarked = useTabStore(
-    (state) => state.tweets[id]?.isBookmarked ?? false
+    (state) => state.tweets[id]?.isBookmarked ?? isBookmarked
   );
   const currentIsAnimaled = useTabStore((state) => state.tweets[id]?.isAnimaled ?? isAnimaled);
 

@@ -1,4 +1,4 @@
-import { Tweet } from './tabStore';
+import { Tweet, useTabStore } from './tabStore';
 import { create } from 'zustand';
 
 type SearchStore = {
@@ -18,9 +18,16 @@ export const useSearchStore = create<SearchStore>((set) => ({
   isSearching: false,
 
   setSearchQuery: (query) => set({ searchQuery: query }),
-  setSearchResults: (results) => set({ searchResults: results }),
-  addSearchResults: (results) =>
-    set((state) => ({ searchResults: [...results, ...state.searchResults] })),
+  setSearchResults: (results) => {
+    // 検索結果をtabStoreに保存
+    useTabStore.getState().addTweetsToStore(results);
+    set({ searchResults: results });
+  },
+  addSearchResults: (results) => {
+    // 検索結果をtabStoreに保存
+    useTabStore.getState().addTweetsToStore(results);
+    set((state) => ({ searchResults: [...results, ...state.searchResults] }));
+  },
   setIsSearching: (isSearching) => set({ isSearching }),
   clearSearch: () => set({ searchQuery: '', searchResults: [], isSearching: false }),
 }));
