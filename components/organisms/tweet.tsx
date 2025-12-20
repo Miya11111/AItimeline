@@ -62,7 +62,9 @@ export default function Tweet({
   );
   const currentIsLiked = useTabStore((state) => state.tweets[id]?.isLiked ?? isLiked);
   const currentIsRetweeted = useTabStore((state) => state.tweets[id]?.isRetweeted ?? isRetweeted);
-  const currentIsBookmarked = useTabStore((state) => state.tweets[id]?.isBookmarked ?? undefined);
+  const currentIsBookmarked = useTabStore(
+    (state) => state.tweets[id]?.isBookmarked ?? false
+  );
   const currentIsAnimaled = useTabStore((state) => state.tweets[id]?.isAnimaled ?? isAnimaled);
 
   const initialAnimalNum = animalNum;
@@ -221,6 +223,7 @@ export default function Tweet({
         visible={sidebarVisible}
         onClose={handleCloseSidebar}
         slideAnim={slideAnim}
+        tweetId={id}
         image={image}
         name={name}
         nameId={nameId}

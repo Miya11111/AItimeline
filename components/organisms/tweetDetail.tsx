@@ -1,7 +1,7 @@
 import { AnimalIconType } from '@/constants/animalIcons';
 import { useColors } from '@/hooks/use-colors';
 import { generateReplyTweets } from '@/services/aiService';
-import { Tweet as TweetType } from '@/stores/tabStore';
+import { Tweet as TweetType, useTabStore } from '@/stores/tabStore';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -38,6 +38,7 @@ type TweetDetailProps = {
   visible: boolean;
   onClose: () => void;
   slideAnim: Animated.Value;
+  tweetId: string;
   image: ImageSourcePropType;
   name: string;
   nameId: string;
@@ -53,6 +54,7 @@ export default function TweetDetail({
   visible,
   onClose,
   slideAnim,
+  tweetId,
   image,
   name,
   nameId,
@@ -64,11 +66,17 @@ export default function TweetDetail({
   initialFavoriteNum,
 }: TweetDetailProps) {
   const colors = useColors();
+  const addTweetsToStore = useTabStore((state) => state.addTweetsToStore);
+  const updateTweetInteraction = useTabStore((state) => state.updateTweetInteraction);
   const [isGeneratingReply, setIsGeneratingReply] = useState<boolean>(false);
   const [finishGenerateReply, setFinishGenerateReply] = useState<boolean>(false);
   const [generatedReplies, setGeneratedReplies] = useState<TweetType[]>([]);
 
   const handleBookmarkPress = () => {
+    // Zustandに保存してブックマークタブに追加/削除
+    updateTweetInteraction(tweetId, {
+      isBookmarked: !tweetState.bookmark,
+    });
     setTweetState((prev) => ({ ...prev, bookmark: !prev.bookmark }));
   };
 
@@ -76,6 +84,8 @@ export default function TweetDetail({
     setIsGeneratingReply(true);
     try {
       const replies = await generateReplyTweets(message, 10000);
+      // 返信ツイートをストアに保存
+      addTweetsToStore(replies);
       setGeneratedReplies(replies);
       setFinishGenerateReply(true);
     } catch (error) {
@@ -311,6 +321,7 @@ export default function TweetDetail({
                       animalIconType={reply.animalIconType}
                       isLiked={reply.isLiked}
                       isRetweeted={reply.isRetweeted}
+                      isBookmarked={reply.isBookmarked ?? false}
                       isAnimaled={reply.isAnimaled}
                     />
                   ))}

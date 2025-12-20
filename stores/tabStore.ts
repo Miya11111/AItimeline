@@ -71,6 +71,9 @@ type TabStore = {
   loadTweetsFromStock: (tabId: string, count: number) => Tweet[]; // ストックから表示用に移動
   getStockCount: (tabId: string) => number; // ストック数を取得
   setGenerating: (tabId: string, isGenerating: boolean) => void; // 生成中フラグを設定
+
+  // 返信ツイート管理機能
+  addTweetsToStore: (tweets: Tweet[]) => void; // 返信ツイートをストアに保存（タブには追加しない）
 };
 
 // ストレージキー
@@ -222,8 +225,49 @@ export const useTabStore = create<TabStore>((set, get) => ({
         },
       };
 
-      // ブックマーク状態が変更された場合は永続化
+      // ブックマーク状態が変更された場合
       if ('isBookmarked' in updates) {
+        const bookmarksTab = state.tabs['bookmarks'];
+
+        if (updates.isBookmarked) {
+          // ブックマークタブに追加
+          if (!bookmarksTab.tweetIds.includes(tweetId)) {
+            const newTabs = {
+              ...state.tabs,
+              bookmarks: {
+                ...bookmarksTab,
+                tweetIds: [...bookmarksTab.tweetIds, tweetId],
+              },
+            };
+            // 永続化
+            saveBookmarkedTweets(newTweets);
+            saveTabs(newTabs, state.tabOrder);
+
+            return {
+              tweets: newTweets,
+              tabs: newTabs,
+            };
+          }
+        } else {
+          // ブックマークタブから削除
+          const newTabs = {
+            ...state.tabs,
+            bookmarks: {
+              ...bookmarksTab,
+              tweetIds: bookmarksTab.tweetIds.filter((id) => id !== tweetId),
+            },
+          };
+          // 永続化
+          saveBookmarkedTweets(newTweets);
+          saveTabs(newTabs, state.tabOrder);
+
+          return {
+            tweets: newTweets,
+            tabs: newTabs,
+          };
+        }
+
+        // 永続化（すでにブックマークタブに存在する場合）
         saveBookmarkedTweets(newTweets);
       }
 
@@ -486,6 +530,18 @@ export const useTabStore = create<TabStore>((set, get) => ({
       set({ isHydrated: true });
     }
   },
+
+  // 返信ツイートをストアに保存（タブには追加しない）
+  addTweetsToStore: (tweets) =>
+    set((state) => {
+      const newTweetsMap = { ...state.tweets };
+      tweets.forEach((tweet) => {
+        if (!newTweetsMap[tweet.id]) {
+          newTweetsMap[tweet.id] = tweet;
+        }
+      });
+      return { tweets: newTweetsMap };
+    }),
 }));
 
 // ヘルパー関数: タブとタブ順序を保存
