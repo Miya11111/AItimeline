@@ -37,7 +37,6 @@ const avatarImages = [
   require('@/assets/icon3.png'),
   require('@/assets/icon4.png'),
   require('@/assets/icon5.jpg'),
-  require('@/assets/icon6.jpg'),
   require('@/assets/icon6.png'),
   require('@/assets/icon7.jpg'),
   require('@/assets/icon8.png'),
